@@ -1,7 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
+
+Future<Map<String, dynamic>> loadStudentData() async {
+  final jsonString = await rootBundle.loadString(
+    'assets/data/student_data.json',
+  );
+
+  return jsonDecode(jsonString) as Map<String, dynamic>;
+}
 
 const List<Map<String, dynamic>> topics = [
   {'title': 'Git & GitHub', 'subtitle': 'Version control', 'done': true},
