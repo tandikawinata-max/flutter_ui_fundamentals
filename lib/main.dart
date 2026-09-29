@@ -30,8 +30,22 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _courseController = TextEditingController();
+
+  @override
+  void dispose() {
+    _courseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +96,55 @@ class DashboardPage extends StatelessWidget {
                   ),
                 ),
               ),
+
+              Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _courseController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nama Mata Kuliah',
+                          hintText: 'Contoh: Pemrograman Mobile',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Nama mata kuliah wajib diisi';
+                          }
+
+                          if (value.trim().length < 3) {
+                            return 'Minimal 3 karakter';
+                          }
+
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Input diterima: '
+                                  '${_courseController.text}',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text('Simpan'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
