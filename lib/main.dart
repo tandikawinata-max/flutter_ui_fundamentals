@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
-final List<Map<String, dynamic>> topics = [
+const List<Map<String, dynamic>> topics = [
   {'title': 'Git & GitHub', 'subtitle': 'Version control', 'done': true},
   {'title': 'Dart Fundamentals', 'subtitle': 'Language basics', 'done': true},
   {
@@ -29,66 +29,64 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const ProfileScreen(),
+      home: const DashboardPage(),
     );
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
+  int get completed => topics.where((item) => item['done'] == true).length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Flutter UI Fundamentals')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 46,
-              backgroundImage: AssetImage(
-                'assets/images/TAN_GANTENG_BANGET.jpeg',
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '$studentId - $studentName',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Tertarik mendalami pengembangan aplikasi mobile lintas platform.',
+      appBar: AppBar(title: const Text('Learning Dashboard')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              '$studentId - $studentName\n'
+              '$completed dari ${topics.length} topik selesai',
               textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Daftar Topik',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: topics.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final item = topics[index];
+                return buildTopicCard(item);
+              },
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: topics.length,
-                itemBuilder: (context, index) {
-                  final item = topics[index];
-                  final isDone = item['done'] as bool;
+          ),
+        ],
+      ),
+    );
+  }
 
-                  return ListTile(
-                    leading: Icon(
-                      isDone ? Icons.check_circle : Icons.circle_outlined,
-                      color: isDone ? Colors.green : Colors.grey,
-                    ),
-                    title: Text(item['title'] as String),
-                    subtitle: Text(item['subtitle'] as String),
-                  );
-                },
-              ),
-            ),
-          ],
+  Widget buildTopicCard(Map<String, dynamic> item) {
+    final isDone = item['done'] == true;
+
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          isDone ? Icons.check_circle : Icons.schedule,
+          color: isDone ? Colors.green : Colors.orange,
+        ),
+        title: Text(item['title'] as String),
+        subtitle: Text(item['subtitle'] as String),
+        trailing: Text(
+          isDone ? 'Selesai' : 'Belum',
+          style: TextStyle(
+            color: isDone ? Colors.green : Colors.orange,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
