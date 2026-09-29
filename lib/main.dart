@@ -136,7 +136,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             );
                           }
                         },
-                        child: const Text('Simpan'),
+                        child: const Text('simpan'),
                       ),
                     ],
                   ),
