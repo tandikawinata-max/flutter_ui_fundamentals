@@ -64,6 +64,42 @@ class MyApp extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Aktivitas Terbaru',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 140,
+                      child: ListView(
+                        children: const [
+                          ListTile(
+                            leading: Icon(Icons.code, color: Colors.blue),
+                            title: Text('Mengerjakan Lab Flutter UI'),
+                            subtitle: Text(
+                              'Eksplorasi dasar-dasar widget dan layout',
+                            ),
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              Icons.sports_esports,
+                              color: Colors.orange,
+                            ),
+                            title: Text('Manajemen Tim E-Sports'),
+                            subtitle: Text(
+                              'Koordinasi roster dan jadwal scrim',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -74,7 +110,6 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  // Reusable widget function untuk kartu statistik
   Widget buildStatCard(String value, String label, IconData icon) {
     return Expanded(
       child: Card(
