@@ -22,7 +22,6 @@ class MyApp extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Menggunakan CircleAvatar dengan file foto dari asset
                 const CircleAvatar(
                   radius: 46,
                   backgroundImage: AssetImage(
@@ -43,13 +42,40 @@ class MyApp extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Belajar Widget Tree',
-                  style: TextStyle(fontSize: 16),
+                const SizedBox(height: 16),
+                // Bagian Statistik menggunakan Row dan Column
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          '8',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('Widget'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          '4',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('Layout'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          '1',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('State'),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                const Icon(Icons.widgets, size: 48),
               ],
             ),
           ),
