@@ -47,7 +47,6 @@ class MyApp extends StatelessWidget {
                       style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16),
-                    // Menggunakan Container dengan BoxDecoration untuk elemen ringkasan
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -55,36 +54,13 @@ class MyApp extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.blue.shade200),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      child: Row(
                         children: [
-                          Column(
-                            children: [
-                              Text(
-                                '8',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text('Widget'),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              Text(
-                                '4',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text('Layout'),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              Text(
-                                '1',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text('State'),
-                            ],
-                          ),
+                          buildStatCard('8', 'Widget', Icons.widgets),
+                          const SizedBox(width: 8),
+                          buildStatCard('4', 'Layout', Icons.view_quilt),
+                          const SizedBox(width: 8),
+                          buildStatCard('1', 'State', Icons.sync),
                         ],
                       ),
                     ),
@@ -92,6 +68,26 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable widget function untuk kartu statistik
+  Widget buildStatCard(String value, String label, IconData icon) {
+    return Expanded(
+      child: Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Icon(icon, size: 24, color: Colors.blue),
+              const SizedBox(height: 6),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(label, style: const TextStyle(fontSize: 12)),
+            ],
           ),
         ),
       ),
