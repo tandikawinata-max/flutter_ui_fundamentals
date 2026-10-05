@@ -11,112 +11,79 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Returning Data Navigation',
+      title: 'BottomNavigationBar Practice',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const CourseListPage(),
+      home: const MainNavigationPage(),
     );
   }
 }
 
-class CourseListPage extends StatefulWidget {
-  const CourseListPage({super.key});
+class MainNavigationPage extends StatefulWidget {
+  const MainNavigationPage({super.key});
 
   @override
-  State<CourseListPage> createState() => _CourseListPageState();
+  State<MainNavigationPage> createState() => _MainNavigationPageState();
 }
 
-class _CourseListPageState extends State<CourseListPage> {
+class _MainNavigationPageState extends State<MainNavigationPage> {
+  // Indeks halaman yang sedang aktif
+  int _currentIndex = 0;
+
   static const String studentName = 'Tandika Winata';
   static const String studentId = '2415051080';
 
-  final List<Map<String, dynamic>> courses = [
-    {
-      'title': 'Dart Fundamentals',
-      'code': 'MOB01',
-      'status': 'Active',
-      'isFavorite': false,
-    },
-    {
-      'title': 'Flutter UI',
-      'code': 'MOB02',
-      'status': 'Active',
-      'isFavorite': false,
-    },
-    {
-      'title': 'Responsive Layout',
-      'code': 'MOB04',
-      'status': 'Active',
-      'isFavorite': false,
-    },
+  // Daftar halaman yang akan ditampilkan berdasarkan tab
+  final List<Widget> _pages = [
+    const HomeScreen(),
+    const CoursesScreen(),
+    const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course List & Return Data')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: _pages[_currentIndex], // Menampilkan halaman sesuai indeks aktif
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mengubah indeks saat tab ditekan
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Courses'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+// Halaman 1: Home
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  static const String studentName = 'Tandika Winata';
+  static const String studentId = '2415051080';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Home Tab')),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Identitas Mahasiswa wajib di UI
-            const Text(
+            Text(
               '$studentId - $studentName',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const Divider(height: 24),
-            const Text(
-              'Tekan course untuk ubah status favorite dan kembalikan data:',
-              style: TextStyle(fontSize: 15, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: courses.length,
-                itemBuilder: (context, index) {
-                  final course = courses[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text(course['title']),
-                      subtitle: Text(course['code']),
-                      trailing: Icon(
-                        course['isFavorite']
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: course['isFavorite'] ? Colors.red : Colors.grey,
-                      ),
-                      onTap: () async {
-                        // Membuka halaman detail dan menunggu hasil kembalian (returning data)
-                        final result = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                CourseDetailPage(course: course),
-                          ),
-                        );
-
-                        // Jika halaman detail mengembalikan nilai true (dijadikan favorite)
-                        if (result == true) {
-                          setState(() {
-                            courses[index]['isFavorite'] =
-                                !courses[index]['isFavorite'];
-                          });
-
-                          // Menampilkan SnackBar sebagai feedback
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Status favorite "${course['title']}" diperbarui!',
-                              ),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  );
-                },
-              ),
+            Divider(height: 24),
+            Text(
+              'Selamat datang di Beranda Aplikasi Praktikum Flutter!',
+              style: TextStyle(fontSize: 18),
             ),
           ],
         ),
@@ -125,10 +92,9 @@ class _CourseListPageState extends State<CourseListPage> {
   }
 }
 
-class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
-
-  const CourseDetailPage({super.key, required this.course});
+// Halaman 2: Courses
+class CoursesScreen extends StatelessWidget {
+  const CoursesScreen({super.key});
 
   static const String studentName = 'Tandika Winata';
   static const String studentId = '2415051080';
@@ -136,39 +102,52 @@ class CourseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(course['title'])),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(title: const Text('Courses Tab')),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Identitas Mahasiswa wajib di UI
-            const Text(
+            Text(
               '$studentId - $studentName',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const Divider(height: 24),
+            Divider(height: 24),
             Text(
-              'Course: ${course['title']}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Daftar mata kuliah responsif tersedia di sini.',
+              style: TextStyle(fontSize: 18),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Klik tombol di bawah untuk mengubah status favorite dan kembali ke halaman sebelumnya:',
-              style: TextStyle(fontSize: 15),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Halaman 3: Profile
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  static const String studentName = 'Tandika Winata';
+  static const String studentId = '2415051080';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile Tab')),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$studentId - $studentName',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade100,
-              ),
-              onPressed: () {
-                // Mengembalikan nilai true ke halaman sebelumnya menggunakan Navigator.pop
-                Navigator.pop(context, true);
-              },
-              icon: const Icon(Icons.favorite, color: Colors.red),
-              label: const Text('Toggle Favorite & Kembali'),
-            ),
+            Divider(height: 24),
+            Text('Nama: Tandika Winata', style: TextStyle(fontSize: 16)),
+            SizedBox(height: 8),
+            Text('NIM: 2415051080', style: TextStyle(fontSize: 16)),
           ],
         ),
       ),
