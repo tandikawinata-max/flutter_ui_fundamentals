@@ -11,25 +11,22 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 13: Form Validation',
+      title: 'Tahap 14: Form Result Navigation',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const FormValidationPage(),
+      home: const FormInputPage(),
     );
   }
 }
 
-class FormValidationPage extends StatefulWidget {
-  const FormValidationPage({super.key});
+class FormInputPage extends StatefulWidget {
+  const FormInputPage({super.key});
 
   @override
-  State<FormValidationPage> createState() => _FormValidationPageState();
+  State<FormInputPage> createState() => _FormInputPageState();
 }
 
-class _FormValidationPageState extends State<FormValidationPage> {
-  // GlobalKey untuk mengontrol dan memvalidasi Form
+class _FormInputPageState extends State<FormInputPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controller untuk mengambil nilai input
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nimController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
@@ -45,14 +42,20 @@ class _FormValidationPageState extends State<FormValidationPage> {
     super.dispose();
   }
 
-  void _submitForm() {
-    // Memeriksa apakah seluruh validasi TextFormField terpenuhi
+  void _submitAndNavigate() {
     if (_formKey.currentState!.validate()) {
-      // Jika valid, tampilkan pesan sukses
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Form berhasil disubmit oleh ${_nameController.text}!'),
-          backgroundColor: Colors.green,
+      // Mengambil data dari text controller
+      final Map<String, String> formData = {
+        'name': _nameController.text,
+        'nim': _nimController.text,
+        'comment': _commentController.text,
+      };
+
+      // Berpindah ke halaman ResultPage dengan membawa data form
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FormResultPage(formData: formData),
         ),
       );
     }
@@ -61,7 +64,7 @@ class _FormValidationPageState extends State<FormValidationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 13: Form & Validasi')),
+      appBar: AppBar(title: const Text('Tahap 14: Input & Kirim Data')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -74,12 +77,10 @@ class _FormValidationPageState extends State<FormValidationPage> {
               ),
               const Divider(height: 24),
               const Text(
-                'Form Masukan / Komentar Mahasiswa',
+                'Form Input Data Mahasiswa',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-
-              // Input Nama
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -88,16 +89,11 @@ class _FormValidationPageState extends State<FormValidationPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Nama lengkap tidak boleh kosong';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Nama tidak boleh kosong'
+                    : null,
               ),
               const SizedBox(height: 16),
-
-              // Input NIM
               TextFormField(
                 controller: _nimController,
                 keyboardType: TextInputType.number,
@@ -107,19 +103,11 @@ class _FormValidationPageState extends State<FormValidationPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'NIM tidak boleh kosong';
-                  }
-                  if (value.length < 10) {
-                    return 'NIM minimal 10 digit';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'NIM tidak boleh kosong'
+                    : null,
               ),
               const SizedBox(height: 16),
-
-              // Input Komentar
               TextFormField(
                 controller: _commentController,
                 maxLines: 4,
@@ -129,28 +117,90 @@ class _FormValidationPageState extends State<FormValidationPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Komentar tidak boleh kosong';
-                  }
-                  if (value.length < 5) {
-                    return 'Komentar terlalu pendek (minimal 5 karakter)';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Komentar tidak boleh kosong'
+                    : null,
               ),
               const SizedBox(height: 24),
-
-              // Tombol Submit
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _submitForm,
-                  child: const Text('Validasi & Simpan'),
+                  onPressed: _submitAndNavigate,
+                  child: const Text('Kirim & Lihat Hasil'),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Halaman untuk menampilkan hasil input form
+class FormResultPage extends StatelessWidget {
+  final Map<String, String> formData;
+
+  const FormResultPage({super.key, required this.formData});
+
+  static const String studentName = 'Tandika Winata';
+  static const String studentId = '2415051080';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Hasil Input Form')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '$studentId - $studentName',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const Divider(height: 24),
+            const Text(
+              'Data Berhasil Disubmit:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nama: ${formData['name']}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'NIM: ${formData['nim']}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Komentar: ${formData['comment']}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Kembali ke Form'),
+              ),
+            ),
+          ],
         ),
       ),
     );
