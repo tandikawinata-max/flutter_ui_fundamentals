@@ -48,7 +48,7 @@ class _DebugPageState extends State<DebugPage> {
       await Future.delayed(const Duration(seconds: 2));
 
       if (triggerError) {
-        throw Exception('Gagal terhubung ke server (Network Error)');
+        throw Exception('Gagal terhubung ke server (Network Eror)');
       }
 
       setState(() {
