@@ -11,24 +11,34 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'LayoutBuilder Breakpoint',
+      title: 'Expanded, Flexible, Wrap',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const BreakpointPage(),
+      home: const FlexWrapPage(),
     );
   }
 }
 
-class BreakpointPage extends StatelessWidget {
-  const BreakpointPage({super.key});
+class FlexWrapPage extends StatelessWidget {
+  const FlexWrapPage({super.key});
 
   static const String studentName = 'Tandika Winata';
   static const String studentId = '2415051080';
 
   @override
   Widget build(BuildContext context) {
+    // Daftar skill untuk contoh Wrap / Chip
+    final List<String> skills = [
+      'Flutter',
+      'Dart',
+      'Responsive Layout',
+      'UI/UX Design',
+      'Mobile Development',
+      'State Management',
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 3: LayoutBuilder & Breakpoint')),
-      body: Padding(
+      appBar: AppBar(title: const Text('Tahap 4: Expanded, Flexible, Wrap')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,112 +50,77 @@ class BreakpointPage extends StatelessWidget {
             ),
             const Divider(height: 24),
 
-            // Menggunakan LayoutBuilder untuk mendeteksi ruang lokal dan breakpoint
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < 600) {
-                    return const CompactLayout();
-                  } else if (constraints.maxWidth < 840) {
-                    return const MediumLayout();
-                  } else {
-                    return const ExpandedLayout();
-                  }
-                },
+            // Bagian 1: Expanded dalam Row (Perbandingan flex 2:1)
+            const Text(
+              '1. Expanded Widget (Perbandingan Flex 2 : 1):',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    height: 80,
+                    color: Colors.blue.shade300,
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Flex 2 (A)',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    height: 80,
+                    color: Colors.orange.shade300,
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Flex 1 (B)',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Bagian 2: Wrap Widget untuk Chip
+            const Text(
+              '2. Wrap Widget untuk Kumpulan Chip:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Wrap(
+                spacing: 8.0, // Jarak horizontal antar chip
+                runSpacing: 4.0, // Jarak vertikal antar baris chip
+                children: skills
+                    .map(
+                      (skill) => Chip(
+                        label: Text(skill),
+                        backgroundColor: Colors.blue.shade50,
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Widget untuk Kategori Compact (< 600 px)
-class CompactLayout extends StatelessWidget {
-  const CompactLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.red.shade100,
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.phone, size: 48, color: Colors.red),
-          SizedBox(height: 8),
-          Text(
-            'Compact Layout (< 600 px)\nTampilan untuk Smartphone',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget untuk Kategori Medium (600 - 839 px)
-class MediumLayout extends StatelessWidget {
-  const MediumLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.orange.shade100,
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.tablet, size: 48, color: Colors.orange),
-          SizedBox(height: 8),
-          Text(
-            'Medium Layout (600 - 839 px)\nTampilan untuk Small Tablet / Tablet Portrait',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget untuk Kategori Expanded (>= 840 px)
-class ExpandedLayout extends StatelessWidget {
-  const ExpandedLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.green.shade100,
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.desktop_mac, size: 48, color: Colors.green),
-          SizedBox(height: 8),
-          Text(
-            'Expanded Layout (>= 840 px)\nTampilan untuk Tablet Landscape / Laptop / Desktop',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          ),
-        ],
       ),
     );
   }
