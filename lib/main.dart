@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'course_state.dart';
+
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
@@ -31,46 +33,20 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int _selectedIndex = 0;
 
-  // State dari Tahap 3
-  bool _isFavorite = false;
-
-  // ValueNotifier untuk Tahap 4
-  final ValueNotifier<int> _favoriteCount = ValueNotifier<int>(0);
-
-  void _toggleFavorite() {
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
-  }
-
-  void _increaseFavoriteCount() {
-    // Tidak perlu setState()
-    _favoriteCount.value++;
-  }
-
-  void _resetFavoriteCount() {
-    // Tidak perlu setState()
-    _favoriteCount.value = 0;
-  }
+  // Object ChangeNotifier
+  final CourseState _courseState = CourseState();
 
   @override
   void dispose() {
-    _favoriteCount.dispose();
+    _courseState.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      HomeScreen(
-        favoriteCount: _favoriteCount,
-        onIncreaseFavorite: _increaseFavoriteCount,
-        onResetFavorite: _resetFavoriteCount,
-      ),
-      CoursesScreen(
-        isFavorite: _isFavorite,
-        onFavoriteChanged: _toggleFavorite,
-      ),
+    final pages = [
+      HomeScreen(courseState: _courseState),
+      CoursesScreen(courseState: _courseState),
       const ProfileScreen(),
     ];
 
@@ -107,20 +83,13 @@ class _MainDashboardState extends State<MainDashboard> {
 }
 
 // ==================================================
-// HOME SCREEN - TAHAP 4
+// HOME SCREEN
 // ==================================================
 
 class HomeScreen extends StatelessWidget {
-  final ValueNotifier<int> favoriteCount;
-  final VoidCallback onIncreaseFavorite;
-  final VoidCallback onResetFavorite;
+  final CourseState courseState;
 
-  const HomeScreen({
-    super.key,
-    required this.favoriteCount,
-    required this.onIncreaseFavorite,
-    required this.onResetFavorite,
-  });
+  const HomeScreen({super.key, required this.courseState});
 
   @override
   Widget build(BuildContext context) {
@@ -137,70 +106,58 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 4',
+            'Tahap 5',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
           const Text(
-            'ValueNotifier dan ValueListenableBuilder',
+            'ChangeNotifier dan notifyListeners()',
             style: TextStyle(fontSize: 16),
           ),
 
           const SizedBox(height: 24),
 
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Eksperimen Jumlah Favorite',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          AnimatedBuilder(
+            animation: courseState,
+            builder: (context, child) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.favorite, size: 36),
+
+                      const SizedBox(width: 16),
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Jumlah Favorite',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            '${courseState.favoriteCount}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
+              );
+            },
+          ),
 
-                  const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-                  // Mendengarkan perubahan ValueNotifier
-                  ValueListenableBuilder<int>(
-                    valueListenable: favoriteCount,
-                    builder: (context, value, child) {
-                      return Text(
-                        'Jumlah Favorite: $value',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  ElevatedButton.icon(
-                    onPressed: onIncreaseFavorite,
-                    icon: const Icon(Icons.favorite),
-                    label: const Text('Tambah Favorite'),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  OutlinedButton.icon(
-                    onPressed: onResetFavorite,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reset'),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'Nilai favorite diperbarui menggunakan ValueNotifier tanpa memanggil setState().',
-                  ),
-                ],
-              ),
-            ),
+          const Text(
+            'Favorite sekarang dikelola oleh CourseState menggunakan ChangeNotifier.',
           ),
         ],
       ),
@@ -210,54 +167,99 @@ class HomeScreen extends StatelessWidget {
 
 // ==================================================
 // COURSES SCREEN
-// Tetap mempertahankan contoh Tahap 3
 // ==================================================
 
 class CoursesScreen extends StatelessWidget {
-  final bool isFavorite;
-  final VoidCallback onFavoriteChanged;
+  final CourseState courseState;
 
-  const CoursesScreen({
+  const CoursesScreen({super.key, required this.courseState});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: courseState,
+      builder: (context, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '$studentId - $studentName',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Daftar Course',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 16),
+
+              CourseCard(
+                code: 'IF001',
+                title: 'Flutter State Management',
+                courseState: courseState,
+              ),
+
+              const SizedBox(height: 12),
+
+              CourseCard(
+                code: 'IF002',
+                title: 'Mobile Application Architecture',
+                courseState: courseState,
+              ),
+
+              const SizedBox(height: 20),
+
+              Text(
+                'Total Favorite: ${courseState.favoriteCount}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ==================================================
+// COURSE CARD
+// ==================================================
+
+class CourseCard extends StatelessWidget {
+  final String code;
+  final String title;
+  final CourseState courseState;
+
+  const CourseCard({
     super.key,
-    required this.isFavorite,
-    required this.onFavoriteChanged,
+    required this.code,
+    required this.title,
+    required this.courseState,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '$studentId - $studentName',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+    final bool favorite = courseState.isFavorite(code);
 
-          const SizedBox(height: 24),
-
-          const Text(
-            'Daftar Course',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 16),
-
-          Card(
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.flutter_dash)),
-              title: const Text('Flutter State Management'),
-              subtitle: Text(
-                isFavorite ? 'Status: Favorite' : 'Status: Belum Favorite',
-              ),
-              trailing: IconButton(
-                onPressed: onFavoriteChanged,
-                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              ),
-            ),
-          ),
-        ],
+    return Card(
+      child: ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.school)),
+        title: Text(title),
+        subtitle: Text(code),
+        trailing: IconButton(
+          onPressed: () {
+            courseState.toggleFavorite(code);
+          },
+          icon: Icon(favorite ? Icons.favorite : Icons.favorite_border),
+        ),
       ),
     );
   }
