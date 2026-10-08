@@ -31,9 +31,11 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int _selectedIndex = 0;
 
-  // Single Source of Truth
-  // State favorite hanya disimpan di parent ini.
+  // State dari Tahap 3
   bool _isFavorite = false;
+
+  // ValueNotifier untuk Tahap 4
+  final ValueNotifier<int> _favoriteCount = ValueNotifier<int>(0);
 
   void _toggleFavorite() {
     setState(() {
@@ -41,10 +43,30 @@ class _MainDashboardState extends State<MainDashboard> {
     });
   }
 
+  void _increaseFavoriteCount() {
+    // Tidak perlu setState()
+    _favoriteCount.value++;
+  }
+
+  void _resetFavoriteCount() {
+    // Tidak perlu setState()
+    _favoriteCount.value = 0;
+  }
+
+  @override
+  void dispose() {
+    _favoriteCount.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomeScreen(isFavorite: _isFavorite, onFavoriteChanged: _toggleFavorite),
+      HomeScreen(
+        favoriteCount: _favoriteCount,
+        onIncreaseFavorite: _increaseFavoriteCount,
+        onResetFavorite: _resetFavoriteCount,
+      ),
       CoursesScreen(
         isFavorite: _isFavorite,
         onFavoriteChanged: _toggleFavorite,
@@ -84,18 +106,20 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 }
 
-// ======================
-// HOME SCREEN
-// ======================
+// ==================================================
+// HOME SCREEN - TAHAP 4
+// ==================================================
 
 class HomeScreen extends StatelessWidget {
-  final bool isFavorite;
-  final VoidCallback onFavoriteChanged;
+  final ValueNotifier<int> favoriteCount;
+  final VoidCallback onIncreaseFavorite;
+  final VoidCallback onResetFavorite;
 
   const HomeScreen({
     super.key,
-    required this.isFavorite,
-    required this.onFavoriteChanged,
+    required this.favoriteCount,
+    required this.onIncreaseFavorite,
+    required this.onResetFavorite,
   });
 
   @override
@@ -113,12 +137,14 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 3',
+            'Tahap 4',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
+          const SizedBox(height: 4),
+
           const Text(
-            'Lifting State Up & Single Source of Truth',
+            'ValueNotifier dan ValueListenableBuilder',
             style: TextStyle(fontSize: 16),
           ),
 
@@ -126,31 +152,51 @@ class HomeScreen extends StatelessWidget {
 
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Flutter State Management',
+                    'Eksperimen Jumlah Favorite',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    isFavorite ? 'Status: Favorite' : 'Status: Belum Favorite',
                   ),
 
                   const SizedBox(height: 16),
 
+                  // Mendengarkan perubahan ValueNotifier
+                  ValueListenableBuilder<int>(
+                    valueListenable: favoriteCount,
+                    builder: (context, value, child) {
+                      return Text(
+                        'Jumlah Favorite: $value',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
                   ElevatedButton.icon(
-                    onPressed: onFavoriteChanged,
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                    ),
-                    label: Text(
-                      isFavorite ? 'Hapus Favorite' : 'Tambah Favorite',
-                    ),
+                    onPressed: onIncreaseFavorite,
+                    icon: const Icon(Icons.favorite),
+                    label: const Text('Tambah Favorite'),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  OutlinedButton.icon(
+                    onPressed: onResetFavorite,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reset'),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Nilai favorite diperbarui menggunakan ValueNotifier tanpa memanggil setState().',
                   ),
                 ],
               ),
@@ -162,9 +208,10 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ======================
+// ==================================================
 // COURSES SCREEN
-// ======================
+// Tetap mempertahankan contoh Tahap 3
+// ==================================================
 
 class CoursesScreen extends StatelessWidget {
   final bool isFavorite;
@@ -202,9 +249,7 @@ class CoursesScreen extends StatelessWidget {
               leading: const CircleAvatar(child: Icon(Icons.flutter_dash)),
               title: const Text('Flutter State Management'),
               subtitle: Text(
-                isFavorite
-                    ? 'Course ini sudah menjadi Favorite'
-                    : 'Course ini belum menjadi Favorite',
+                isFavorite ? 'Status: Favorite' : 'Status: Belum Favorite',
               ),
               trailing: IconButton(
                 onPressed: onFavoriteChanged,
@@ -218,9 +263,9 @@ class CoursesScreen extends StatelessWidget {
   }
 }
 
-// ======================
+// ==================================================
 // PROFILE SCREEN
-// ======================
+// ==================================================
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -236,12 +281,16 @@ class ProfileScreen extends StatelessWidget {
             '$studentId - $studentName',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
+
           SizedBox(height: 24),
+
           Text(
             'Profile',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
+
           SizedBox(height: 12),
+
           Text('Nama : $studentName'),
           Text('NIM : $studentId'),
           Text('Kelas : PTI 5B'),
