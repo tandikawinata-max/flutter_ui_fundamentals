@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'course_state.dart';
 
@@ -6,7 +7,9 @@ const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(create: (_) => CourseState(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -33,20 +36,11 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int _selectedIndex = 0;
 
-  // Object ChangeNotifier
-  final CourseState _courseState = CourseState();
-
-  @override
-  void dispose() {
-    _courseState.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(courseState: _courseState),
-      CoursesScreen(courseState: _courseState),
+      const HomeScreen(),
+      const CoursesScreen(),
       const ProfileScreen(),
     ];
 
@@ -87,12 +81,12 @@ class _MainDashboardState extends State<MainDashboard> {
 // ==================================================
 
 class HomeScreen extends StatelessWidget {
-  final CourseState courseState;
-
-  const HomeScreen({super.key, required this.courseState});
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final courseState = Provider.of<CourseState>(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -106,58 +100,53 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 5',
+            'Tahap 6',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
           const Text(
-            'ChangeNotifier dan notifyListeners()',
+            'Provider pada Widget Tree',
             style: TextStyle(fontSize: 16),
           ),
 
           const SizedBox(height: 24),
 
-          AnimatedBuilder(
-            animation: courseState,
-            builder: (context, child) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  const Icon(Icons.favorite, size: 36),
+
+                  const SizedBox(width: 16),
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.favorite, size: 36),
-
-                      const SizedBox(width: 16),
-
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Jumlah Favorite',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            '${courseState.favoriteCount}',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      const Text(
+                        'Jumlah Favorite',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '${courseState.favoriteCount}',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 16),
 
           const Text(
-            'Favorite sekarang dikelola oleh CourseState menggunakan ChangeNotifier.',
+            'CourseState sekarang disediakan menggunakan ChangeNotifierProvider.',
           ),
         ],
       ),
@@ -170,61 +159,53 @@ class HomeScreen extends StatelessWidget {
 // ==================================================
 
 class CoursesScreen extends StatelessWidget {
-  final CourseState courseState;
-
-  const CoursesScreen({super.key, required this.courseState});
+  const CoursesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: courseState,
-      builder: (context, child) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '$studentId - $studentName',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+    final courseState = Provider.of<CourseState>(context);
 
-              const SizedBox(height: 24),
-
-              const Text(
-                'Daftar Course',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 16),
-
-              CourseCard(
-                code: 'IF001',
-                title: 'Flutter State Management',
-                courseState: courseState,
-              ),
-
-              const SizedBox(height: 12),
-
-              CourseCard(
-                code: 'IF002',
-                title: 'Mobile Application Architecture',
-                courseState: courseState,
-              ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                'Total Favorite: ${courseState.favoriteCount}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '$studentId - $studentName',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-        );
-      },
+
+          const SizedBox(height: 24),
+
+          const Text(
+            'Daftar Course',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 16),
+
+          CourseCard(
+            code: 'IF001',
+            title: 'Flutter State Management',
+            courseState: courseState,
+          ),
+
+          const SizedBox(height: 12),
+
+          CourseCard(
+            code: 'IF002',
+            title: 'Mobile Application Architecture',
+            courseState: courseState,
+          ),
+
+          const SizedBox(height: 20),
+
+          Text(
+            'Total Favorite: ${courseState.favoriteCount}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }
