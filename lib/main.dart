@@ -26,6 +26,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ==================================================
+// MAIN DASHBOARD
+// ==================================================
+
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
 
@@ -78,6 +82,7 @@ class _MainDashboardState extends State<MainDashboard> {
 
 // ==================================================
 // HOME SCREEN
+// Menggunakan context.watch()
 // ==================================================
 
 class HomeScreen extends StatelessWidget {
@@ -85,7 +90,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseState = Provider.of<CourseState>(context);
+    // WATCH:
+    // Mendengarkan perubahan CourseState.
+    final courseState = context.watch<CourseState>();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -100,14 +107,14 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 6',
+            'Tahap 7',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
           const Text(
-            'Provider pada Widget Tree',
+            'context.watch(), context.read(), dan Consumer',
             style: TextStyle(fontSize: 16),
           ),
 
@@ -129,6 +136,7 @@ class HomeScreen extends StatelessWidget {
                         'Jumlah Favorite',
                         style: TextStyle(fontSize: 16),
                       ),
+
                       Text(
                         '${courseState.favoriteCount}',
                         style: const TextStyle(
@@ -146,7 +154,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           const Text(
-            'CourseState sekarang disediakan menggunakan ChangeNotifierProvider.',
+            'Jumlah favorite di atas menggunakan context.watch() sehingga otomatis berubah ketika state berubah.',
           ),
         ],
       ),
@@ -163,8 +171,6 @@ class CoursesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseState = Provider.of<CourseState>(context);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -184,25 +190,40 @@ class CoursesScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          CourseCard(
-            code: 'IF001',
-            title: 'Flutter State Management',
-            courseState: courseState,
-          ),
+          const CourseCard(code: 'IF001', title: 'Flutter State Management'),
 
           const SizedBox(height: 12),
 
-          CourseCard(
+          const CourseCard(
             code: 'IF002',
             title: 'Mobile Application Architecture',
-            courseState: courseState,
           ),
 
           const SizedBox(height: 20),
 
-          Text(
-            'Total Favorite: ${courseState.favoriteCount}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // CONSUMER:
+          // Hanya bagian ini yang mendengarkan perubahan favorite.
+          Consumer<CourseState>(
+            builder: (context, courseState, child) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.favorite),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Total Favorite: ${courseState.favoriteCount}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -212,33 +233,40 @@ class CoursesScreen extends StatelessWidget {
 
 // ==================================================
 // COURSE CARD
+// watch untuk tampilan
+// read untuk aksi tombol
 // ==================================================
 
 class CourseCard extends StatelessWidget {
   final String code;
   final String title;
-  final CourseState courseState;
 
-  const CourseCard({
-    super.key,
-    required this.code,
-    required this.title,
-    required this.courseState,
-  });
+  const CourseCard({super.key, required this.code, required this.title});
 
   @override
   Widget build(BuildContext context) {
+    // WATCH digunakan karena icon perlu berubah
+    // ketika status favorite berubah.
+    final courseState = context.watch<CourseState>();
+
     final bool favorite = courseState.isFavorite(code);
 
     return Card(
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.school)),
+
         title: Text(title),
-        subtitle: Text(code),
+
+        subtitle: Text(
+          favorite ? '$code - Favorite' : '$code - Belum Favorite',
+        ),
+
         trailing: IconButton(
+          // READ digunakan untuk menjalankan aksi.
           onPressed: () {
-            courseState.toggleFavorite(code);
+            context.read<CourseState>().toggleFavorite(code);
           },
+
           icon: Icon(favorite ? Icons.favorite : Icons.favorite_border),
         ),
       ),
