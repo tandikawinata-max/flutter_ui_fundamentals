@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 
+const String studentName = 'Tandika Winata';
+const String studentId = '2415051080';
+
 void main() {
-  runApp(const CourseExplorerApp());
+  runApp(const MyApp());
 }
 
-class CourseExplorerApp extends StatelessWidget {
-  const CourseExplorerApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Course Explorer v2 - Tahap 2',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MainDashboard(),
       debugShowCheckedModeBanner: false,
+      title: 'Course Explorer',
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+      home: const MainDashboard(),
     );
   }
 }
@@ -26,58 +29,54 @@ class MainDashboard extends StatefulWidget {
 }
 
 class _MainDashboardState extends State<MainDashboard> {
-  int _currentIndex = 0;
-  int _favoriteCount = 0;
-  bool _isFavorite1 = false;
-  bool _isFavorite2 = false;
+  int _selectedIndex = 0;
 
-  void _toggleFavorite1() {
-    setState(() {
-      _isFavorite1 = !_isFavorite1;
-      _favoriteCount = _isFavorite1 ? _favoriteCount + 1 : _favoriteCount - 1;
-    });
-  }
+  // Single Source of Truth
+  // State favorite hanya disimpan di parent ini.
+  bool _isFavorite = false;
 
-  void _toggleFavorite2() {
+  void _toggleFavorite() {
     setState(() {
-      _isFavorite2 = !_isFavorite2;
-      _favoriteCount = _isFavorite2 ? _favoriteCount + 1 : _favoriteCount - 1;
+      _isFavorite = !_isFavorite;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomeScreen(
-        favoriteCount: _favoriteCount,
-        isFavorite1: _isFavorite1,
-        onFavorite1Changed: _toggleFavorite1,
-      ),
+      HomeScreen(isFavorite: _isFavorite, onFavoriteChanged: _toggleFavorite),
       CoursesScreen(
-        isFavorite2: _isFavorite2,
-        onFavorite2Changed: _toggleFavorite2,
+        isFavorite: _isFavorite,
+        onFavoriteChanged: _toggleFavorite,
       ),
-      FavoritesScreen(
-        favoriteCount: _favoriteCount, // Mengirim angka ke Favorites screen
-      ),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Prop Drilling & Angka Dinamis')),
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
+      appBar: AppBar(title: const Text('Course Explorer')),
+      body: pages[_selectedIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
           setState(() {
-            _currentIndex = index;
+            _selectedIndex = index;
           });
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Courses'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Courses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
@@ -85,153 +84,72 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 }
 
-// ==========================================
+// ======================
 // HOME SCREEN
-// ==========================================
-class HomeScreen extends StatefulWidget {
-  final int favoriteCount;
-  final bool isFavorite1;
-  final VoidCallback onFavorite1Changed;
+// ======================
+
+class HomeScreen extends StatelessWidget {
+  final bool isFavorite;
+  final VoidCallback onFavoriteChanged;
 
   const HomeScreen({
     super.key,
-    required this.favoriteCount,
-    required this.isFavorite1,
-    required this.onFavorite1Changed,
+    required this.isFavorite,
+    required this.onFavoriteChanged,
   });
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  static const String studentName = 'Tandika Winata';
-  static const String studentId = '2415051080';
-  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Identitas Mahasiswa
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: const Text(
-              '$studentId • $studentName',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+          const Text(
+            '$studentId - $studentName',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
 
-          // Kotak Ringkasan Angka (Sesuai Mockup Worksheet)
-          Row(
-            children: [
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Courses',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '2',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Favorites',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        // Menampilkan Angka Dinamis dari Parent via Constructor
-                        Text(
-                          '${widget.favoriteCount}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 24),
+
+          const Text(
+            'Tahap 3',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
 
-          // Card Course 1
+          const Text(
+            'Lifting State Up & Single Source of Truth',
+            style: TextStyle(fontSize: 16),
+          ),
+
+          const SizedBox(height: 24),
+
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'State Management',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          widget.isFavorite1
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: Colors.red,
-                        ),
-                        onPressed: widget.onFavorite1Changed,
-                      ),
-                    ],
-                  ),
                   const Text(
-                    'Status: active',
-                    style: TextStyle(color: Colors.green),
+                    'Flutter State Management',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  if (_isExpanded) ...[
-                    const Divider(),
-                    const Text(
-                      'Mempelajari state management dan arsitektur mobile.',
-                      style: TextStyle(color: Colors.grey),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    isFavorite ? 'Status: Favorite' : 'Status: Belum Favorite',
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  ElevatedButton.icon(
+                    onPressed: onFavoriteChanged,
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
                     ),
-                  ],
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isExpanded = !_isExpanded;
-                        });
-                      },
-                      child: Text(_isExpanded ? 'Sembunyikan' : 'Lihat Detail'),
+                    label: Text(
+                      isFavorite ? 'Hapus Favorite' : 'Tambah Favorite',
                     ),
                   ),
                 ],
@@ -244,37 +162,53 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ======================
+// COURSES SCREEN
+// ======================
+
 class CoursesScreen extends StatelessWidget {
-  final bool isFavorite2;
-  final VoidCallback onFavorite2Changed;
+  final bool isFavorite;
+  final VoidCallback onFavoriteChanged;
 
   const CoursesScreen({
     super.key,
-    required this.isFavorite2,
-    required this.onFavorite2Changed,
+    required this.isFavorite,
+    required this.onFavoriteChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Daftar Mata Kuliah Lainnya',
+            '$studentId - $studentName',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            'Daftar Course',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 16),
+
           Card(
             child: ListTile(
-              title: const Text('Dart Fundamentals'),
-              subtitle: const Text('Status: done'),
+              leading: const CircleAvatar(child: Icon(Icons.flutter_dash)),
+              title: const Text('Flutter State Management'),
+              subtitle: Text(
+                isFavorite
+                    ? 'Course ini sudah menjadi Favorite'
+                    : 'Course ini belum menjadi Favorite',
+              ),
               trailing: IconButton(
-                icon: Icon(
-                  isFavorite2 ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.red,
-                ),
-                onPressed: onFavorite2Changed,
+                onPressed: onFavoriteChanged,
+                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
               ),
             ),
           ),
@@ -284,17 +218,34 @@ class CoursesScreen extends StatelessWidget {
   }
 }
 
-class FavoritesScreen extends StatelessWidget {
-  final int favoriteCount;
+// ======================
+// PROFILE SCREEN
+// ======================
 
-  const FavoritesScreen({super.key, required this.favoriteCount});
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Jumlah Course Favorit saat ini: $favoriteCount',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$studentId - $studentName',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 24),
+          Text(
+            'Profile',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12),
+          Text('Nama : $studentName'),
+          Text('NIM : $studentId'),
+          Text('Kelas : PTI 5B'),
+        ],
       ),
     );
   }
