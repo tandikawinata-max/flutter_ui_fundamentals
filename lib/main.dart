@@ -10,8 +10,15 @@ const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
 void main() {
+  final CourseService service = CourseService();
+
+  final CourseRepository repository = CourseRepository(service);
+
   runApp(
-    ChangeNotifierProvider(create: (_) => CourseState(), child: const MyApp()),
+    ChangeNotifierProvider(
+      create: (_) => CourseState(repository)..loadCourses(),
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -107,55 +114,52 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 10',
+            'Tahap 11',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
-          const Text('Repository Pattern', style: TextStyle(fontSize: 16)),
+          const Text('Provider untuk Async State'),
 
           const SizedBox(height: 24),
 
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.storage, size: 36),
+                  const Text(
+                    'Status Data',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
 
-                  const SizedBox(width: 16),
+                  const SizedBox(height: 12),
 
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Data Architecture',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                  Text(
+                    'Jumlah Course: '
+                    '${courseState.courses.length}',
+                  ),
 
-                        const SizedBox(height: 4),
+                  Text(
+                    'Jumlah Favorite: '
+                    '${courseState.favoriteCount}',
+                  ),
 
-                        const Text('UI → Repository → Service → JSON'),
+                  Text(
+                    'Loading: '
+                    '${courseState.isLoading}',
+                  ),
 
-                        const SizedBox(height: 12),
-
-                        Text(
-                          'Jumlah Favorite: '
-                          '${courseState.favoriteCount}',
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Error: '
+                    '${courseState.error ?? "Tidak ada"}',
                   ),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          const Text('Data course sekarang diakses melalui CourseRepository.'),
         ],
       ),
     );
@@ -166,36 +170,14 @@ class HomeScreen extends StatelessWidget {
 // COURSES SCREEN
 // ==================================================
 
-class CoursesScreen extends StatefulWidget {
+class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
 
   @override
-  State<CoursesScreen> createState() => _CoursesScreenState();
-}
-
-class _CoursesScreenState extends State<CoursesScreen> {
-  // Service sebagai sumber data.
-  final CourseService _courseService = CourseService();
-
-  late final CourseRepository _courseRepository;
-
-  late Future<List<Course>> _coursesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Dependency CourseService diberikan ke Repository.
-    _courseRepository = CourseRepository(_courseService);
-
-    // UI meminta data melalui Repository,
-    // bukan langsung melalui CourseService.
-    _coursesFuture = _courseRepository.getCourses();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    final courseState = context.watch<CourseState>();
+
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,67 +196,118 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
           const SizedBox(height: 4),
 
-          const Text('Data dimuat melalui Repository → Service'),
+          const Text('Provider → Repository → Service'),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          FutureBuilder<List<Course>>(
-            future: _coursesFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError) {
-                return Text('Terjadi error: ${snapshot.error}');
-              }
-
-              final List<Course> courses = snapshot.data ?? [];
-
-              if (courses.isEmpty) {
-                return const Text('Data course tidak tersedia.');
-              }
-
-              return Column(
-                children: courses.map((course) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: CourseCard(course: course),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-
-          const SizedBox(height: 12),
-
-          Consumer<CourseState>(
-            builder: (context, courseState, child) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.favorite),
-
-                      const SizedBox(width: 12),
-
-                      Text(
-                        'Total Favorite: '
-                        '${courseState.favoriteCount}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          Expanded(child: _buildCourseContent(context, courseState)),
         ],
       ),
+    );
+  }
+
+  Widget _buildCourseContent(BuildContext context, CourseState courseState) {
+    // ==============================
+    // LOADING
+    // ==============================
+
+    if (courseState.isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Memuat data course...'),
+          ],
+        ),
+      );
+    }
+
+    // ==============================
+    // ERROR
+    // ==============================
+
+    if (courseState.error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              'Gagal memuat data',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(courseState.error!, textAlign: TextAlign.center),
+
+            const SizedBox(height: 16),
+
+            ElevatedButton(
+              onPressed: () {
+                context.read<CourseState>().loadCourses();
+              },
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ==============================
+    // DATA KOSONG
+    // ==============================
+
+    if (courseState.courses.isEmpty) {
+      return const Center(child: Text('Data course tidak tersedia.'));
+    }
+
+    // ==============================
+    // SUCCESS
+    // ==============================
+
+    return ListView.builder(
+      itemCount: courseState.courses.length + 1,
+      itemBuilder: (context, index) {
+        if (index == courseState.courses.length) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 20),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.favorite),
+
+                    const SizedBox(width: 12),
+
+                    Text(
+                      'Total Favorite: '
+                      '${courseState.favoriteCount}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        final Course course = courseState.courses[index];
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: CourseCard(course: course),
+        );
+      },
     );
   }
 }
