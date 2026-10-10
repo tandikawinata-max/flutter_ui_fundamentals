@@ -14,6 +14,7 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => CourseProvider(repository)..loadCourses(),
+
       child: const MyApp(),
     ),
   );
@@ -26,8 +27,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
       title: 'Course Explorer',
+
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+
       home: const MainDashboard(),
     );
   }

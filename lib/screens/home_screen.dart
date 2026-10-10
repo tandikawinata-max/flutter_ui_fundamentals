@@ -26,44 +26,38 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 12',
+            'Tahap 13',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
-          const Text('Refactor Struktur Folder'),
+          const Text('Shared Favorites di Beberapa Screen'),
 
           const SizedBox(height: 24),
 
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text(
-                    'Status Aplikasi',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Icon(Icons.favorite, size: 36),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(width: 16),
 
-                  Text(
-                    'Jumlah Course: '
-                    '${provider.courses.length}',
-                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Jumlah Favorite'),
 
-                  Text(
-                    'Jumlah Favorite: '
-                    '${provider.favoriteCount}',
-                  ),
-
-                  Text('Loading: ${provider.isLoading}'),
-
-                  Text(
-                    'Error: '
-                    '${provider.error ?? "Tidak ada"}',
+                      Text(
+                        '${provider.favoriteCount}',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

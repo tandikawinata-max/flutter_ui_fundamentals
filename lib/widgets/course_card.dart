@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../screens/course_detail_screen.dart';
 
 class CourseCard extends StatelessWidget {
   final Course course;
@@ -17,11 +18,22 @@ class CourseCard extends StatelessWidget {
 
     return Card(
       child: ListTile(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CourseDetailScreen(course: course),
+            ),
+          );
+        },
+
         leading: const CircleAvatar(child: Icon(Icons.school)),
+
         title: Text(
           course.title,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -30,6 +42,7 @@ class CourseCard extends StatelessWidget {
             Text('Status: ${course.status}'),
           ],
         ),
+
         trailing: IconButton(
           onPressed: () {
             context.read<CourseProvider>().toggleFavorite(course.code);

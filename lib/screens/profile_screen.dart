@@ -28,7 +28,9 @@ class ProfileScreen extends StatelessWidget {
           SizedBox(height: 12),
 
           Text('Nama : Tandika Winata'),
+
           Text('NIM : 2415051080'),
+
           Text('Kelas : PTI 5B'),
         ],
       ),

@@ -8,11 +8,19 @@ class CourseProvider extends ChangeNotifier {
 
   CourseProvider(this.repository);
 
+  // =========================
+  // COURSE DATA
+  // =========================
+
   List<Course> courses = [];
 
   bool isLoading = false;
 
   String? error;
+
+  // =========================
+  // FAVORITE SHARED STATE
+  // =========================
 
   final Set<String> _favorites = {};
 
@@ -38,6 +46,15 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Hanya mengambil Course yang menjadi favorite
+  List<Course> get favoriteCourses {
+    return courses.where((course) => _favorites.contains(course.code)).toList();
+  }
+
+  // =========================
+  // LOAD COURSE
+  // =========================
+
   Future<void> loadCourses() async {
     isLoading = true;
     error = null;
@@ -50,6 +67,7 @@ class CourseProvider extends ChangeNotifier {
       error = e.toString();
     } finally {
       isLoading = false;
+
       notifyListeners();
     }
   }

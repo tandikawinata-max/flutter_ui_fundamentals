@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import 'favorites_screen.dart';
 
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
@@ -27,14 +28,35 @@ class CoursesScreen extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          const Text(
-            'Daftar Course',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Daftar Course',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              IconButton(
+                tooltip: 'Favorites',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+                  );
+                },
+
+                icon: Badge(
+                  label: Text('${provider.favoriteCount}'),
+                  child: const Icon(Icons.favorite),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 4),
 
-          const Text('Provider → Repository → Service'),
+          const Text('Shared Favorite State'),
 
           const SizedBox(height: 20),
 
@@ -46,16 +68,7 @@ class CoursesScreen extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, CourseProvider provider) {
     if (provider.isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Memuat data course...'),
-          ],
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null) {
@@ -63,18 +76,11 @@ class CoursesScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48),
+            const Text('Gagal memuat data'),
 
             const SizedBox(height: 12),
 
-            const Text(
-              'Gagal memuat data',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(provider.error!, textAlign: TextAlign.center),
+            Text(provider.error!),
 
             const SizedBox(height: 16),
 
@@ -95,28 +101,23 @@ class CoursesScreen extends StatelessWidget {
 
     return ListView.builder(
       itemCount: provider.courses.length + 1,
+
       itemBuilder: (context, index) {
         if (index == provider.courses.length) {
           return Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 20),
+
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.favorite),
 
-                    const SizedBox(width: 12),
-
-                    Text(
-                      'Total Favorite: '
-                      '${provider.favoriteCount}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Total Favorite: '
+                  '${provider.favoriteCount}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
