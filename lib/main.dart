@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'course_state.dart';
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
@@ -105,16 +106,13 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 8',
+            'Tahap 9',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
-          const Text(
-            'Model Course dan Course.fromJson()',
-            style: TextStyle(fontSize: 16),
-          ),
+          const Text('Service / Data Source', style: TextStyle(fontSize: 16)),
 
           const SizedBox(height: 24),
 
@@ -144,6 +142,12 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          const Text(
+            'Data course sekarang dibaca dari JSON melalui CourseService.',
+          ),
         ],
       ),
     );
@@ -154,22 +158,27 @@ class HomeScreen extends StatelessWidget {
 // COURSES SCREEN
 // ==================================================
 
-class CoursesScreen extends StatelessWidget {
+class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
 
   @override
+  State<CoursesScreen> createState() => _CoursesScreenState();
+}
+
+class _CoursesScreenState extends State<CoursesScreen> {
+  final CourseService _courseService = CourseService();
+
+  late Future<List<Course>> _coursesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _coursesFuture = _courseService.loadCourses();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Data masih berbentuk Map<String, dynamic>
-    final Map<String, dynamic> courseJson = {
-      'code': 'IF001',
-      'title': 'Flutter State Management',
-      'credits': 3,
-      'status': 'Active',
-    };
-
-    // Map diubah menjadi object Course
-    final Course course = Course.fromJson(courseJson);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -187,17 +196,41 @@ class CoursesScreen extends StatelessWidget {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
-          const Text(
-            'Data di bawah telah diubah dari JSON/Map menjadi object Course.',
-          ),
+          const Text('Data dimuat melalui CourseService'),
 
           const SizedBox(height: 16),
 
-          CourseCard(course: course),
+          FutureBuilder<List<Course>>(
+            future: _coursesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          const SizedBox(height: 20),
+              if (snapshot.hasError) {
+                return Text('Terjadi error: ${snapshot.error}');
+              }
+
+              final List<Course> courses = snapshot.data ?? [];
+
+              if (courses.isEmpty) {
+                return const Text('Data course tidak tersedia.');
+              }
+
+              return Column(
+                children: courses.map((course) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: CourseCard(course: course),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
 
           Consumer<CourseState>(
             builder: (context, courseState, child) {
@@ -207,9 +240,12 @@ class CoursesScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       const Icon(Icons.favorite),
+
                       const SizedBox(width: 12),
+
                       Text(
-                        'Total Favorite: ${courseState.favoriteCount}',
+                        'Total Favorite: '
+                        '${courseState.favoriteCount}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -243,37 +279,28 @@ class CourseCard extends StatelessWidget {
     final bool favorite = courseState.isFavorite(course.code);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListTile(
-          leading: const CircleAvatar(child: Icon(Icons.school)),
+      child: ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.school)),
 
-          title: Text(
-            course.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+        title: Text(
+          course.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
 
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kode: ${course.code}'),
+            Text('SKS: ${course.credits}'),
+            Text('Status: ${course.status}'),
+          ],
+        ),
 
-              Text('Kode: ${course.code}'),
-
-              Text('SKS: ${course.credits}'),
-
-              Text('Status: ${course.status}'),
-
-              Text(favorite ? 'Favorite: Ya' : 'Favorite: Tidak'),
-            ],
-          ),
-
-          trailing: IconButton(
-            onPressed: () {
-              context.read<CourseState>().toggleFavorite(course.code);
-            },
-            icon: Icon(favorite ? Icons.favorite : Icons.favorite_border),
-          ),
+        trailing: IconButton(
+          onPressed: () {
+            context.read<CourseState>().toggleFavorite(course.code);
+          },
+          icon: Icon(favorite ? Icons.favorite : Icons.favorite_border),
         ),
       ),
     );
