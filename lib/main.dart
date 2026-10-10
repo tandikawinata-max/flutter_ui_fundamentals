@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'course_state.dart';
 import 'models/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'Tandika Winata';
@@ -106,13 +107,13 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           const Text(
-            'Tahap 9',
+            'Tahap 10',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 4),
 
-          const Text('Service / Data Source', style: TextStyle(fontSize: 16)),
+          const Text('Repository Pattern', style: TextStyle(fontSize: 16)),
 
           const SizedBox(height: 24),
 
@@ -121,22 +122,31 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  const Icon(Icons.favorite, size: 36),
+                  const Icon(Icons.storage, size: 36),
 
                   const SizedBox(width: 16),
 
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Jumlah Favorite'),
-                      Text(
-                        '${courseState.favoriteCount}',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Data Architecture',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 4),
+
+                        const Text('UI → Repository → Service → JSON'),
+
+                        const SizedBox(height: 12),
+
+                        Text(
+                          'Jumlah Favorite: '
+                          '${courseState.favoriteCount}',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -145,9 +155,7 @@ class HomeScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          const Text(
-            'Data course sekarang dibaca dari JSON melalui CourseService.',
-          ),
+          const Text('Data course sekarang diakses melalui CourseRepository.'),
         ],
       ),
     );
@@ -166,7 +174,10 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
+  // Service sebagai sumber data.
   final CourseService _courseService = CourseService();
+
+  late final CourseRepository _courseRepository;
 
   late Future<List<Course>> _coursesFuture;
 
@@ -174,7 +185,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
   void initState() {
     super.initState();
 
-    _coursesFuture = _courseService.loadCourses();
+    // Dependency CourseService diberikan ke Repository.
+    _courseRepository = CourseRepository(_courseService);
+
+    // UI meminta data melalui Repository,
+    // bukan langsung melalui CourseService.
+    _coursesFuture = _courseRepository.getCourses();
   }
 
   @override
@@ -198,7 +214,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
           const SizedBox(height: 4),
 
-          const Text('Data dimuat melalui CourseService'),
+          const Text('Data dimuat melalui Repository → Service'),
 
           const SizedBox(height: 16),
 
