@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
-import 'favorites_screen.dart';
 
 const String studentName = 'Tandika Winata';
+
 const String studentId = '2415051080';
 
 class CoursesScreen extends StatelessWidget {
@@ -17,48 +17,29 @@ class CoursesScreen extends StatelessWidget {
     final provider = context.watch<CourseProvider>();
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '$studentId - $studentName',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            'Courses',
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 6),
+
+          const Text('$studentId • $studentName'),
+
+          const SizedBox(height: 8),
+
+          Text(
+            '${provider.courses.length} courses available',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
 
           const SizedBox(height: 24),
-
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Daftar Course',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              IconButton(
-                tooltip: 'Favorites',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FavoritesScreen()),
-                  );
-                },
-
-                icon: Badge(
-                  label: Text('${provider.favoriteCount}'),
-                  child: const Icon(Icons.favorite),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 4),
-
-          const Text('Shared Favorite State'),
-
-          const SizedBox(height: 20),
 
           Expanded(child: _buildContent(context, provider)),
         ],
@@ -68,67 +49,88 @@ class CoursesScreen extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, CourseProvider provider) {
     if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (provider.error != null) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Gagal memuat data'),
-
-            const SizedBox(height: 12),
-
-            Text(provider.error!),
-
-            const SizedBox(height: 16),
-
-            ElevatedButton(
-              onPressed: () {
-                context.read<CourseProvider>().loadCourses();
-              },
-              child: const Text('Coba Lagi'),
-            ),
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading courses...'),
           ],
         ),
       );
     }
 
-    if (provider.courses.isEmpty) {
-      return const Center(child: Text('Data course tidak tersedia.'));
+    if (provider.error != null) {
+      return Center(
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline_rounded, size: 48),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Unable to load courses',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(provider.error!, textAlign: TextAlign.center),
+
+                const SizedBox(height: 18),
+
+                FilledButton.icon(
+                  onPressed: () {
+                    context.read<CourseProvider>().loadCourses();
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      itemCount: provider.courses.length + 1,
+    if (provider.courses.isEmpty) {
+      return const Center(child: Text('No course available.'));
+    }
 
-      itemBuilder: (context, index) {
-        if (index == provider.courses.length) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 900) {
+          return GridView.builder(
+            itemCount: provider.courses.length,
 
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-
-                child: Text(
-                  'Total Favorite: '
-                  '${provider.favoriteCount}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 2.4,
             ),
+
+            itemBuilder: (context, index) {
+              final Course course = provider.courses[index];
+
+              return CourseCard(course: course);
+            },
           );
         }
 
-        final Course course = provider.courses[index];
+        return ListView.separated(
+          itemCount: provider.courses.length,
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: CourseCard(course: course),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+
+          itemBuilder: (context, index) {
+            return CourseCard(course: provider.courses[index]);
+          },
         );
       },
     );

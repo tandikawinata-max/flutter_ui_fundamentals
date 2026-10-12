@@ -14,7 +14,6 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => CourseProvider(repository)..loadCourses(),
-
       child: const MyApp(),
     ),
   );
@@ -27,10 +26,40 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Course Explorer v2',
 
-      title: 'Course Explorer',
+      theme: ThemeData(
+        useMaterial3: true,
 
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6750A4),
+          brightness: Brightness.light,
+        ),
+
+        scaffoldBackgroundColor: const Color(0xFFF7F7FC),
+
+        cardTheme: const CardThemeData(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+        ),
+
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 0,
+          backgroundColor: Color(0xFFF7F7FC),
+          surfaceTintColor: Colors.transparent,
+        ),
+
+        navigationBarTheme: NavigationBarThemeData(
+          height: 70,
+          indicatorShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
 
       home: const MainDashboard(),
     );
