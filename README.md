@@ -51,6 +51,6 @@ Repository
 ↓  
 Service  
 ↓  
-JSON
+JSON.
 
 UI tidak membaca JSON secara langsung dan Provider tidak menyimpan `BuildContext`.
