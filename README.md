@@ -1,17 +1,56 @@
-# flutter_ui_fundamentals
+# Course Explorer v2
 
-A new Flutter project.
+Nama: Tandika Winata  
+NIM: 2415051080  
+Kelas: PTI 5B
 
-## Getting Started
+## Struktur Arsitektur
 
-This project is a starting point for a Flutter application.
+Course Explorer v2 menggunakan pemisahan tanggung jawab dengan alur:
 
-A few resources to get you started if this is your first Flutter project:
+Screen / Widget → Provider → Repository → Service / Data Source
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Tanggung Jawab Folder
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### models
+
+Berisi model data aplikasi.  
+Contoh: `Course` digunakan untuk merepresentasikan data course dari JSON.
+
+### services
+
+Berisi proses teknis untuk mengambil data dari sumber data.  
+`CourseService` membaca file JSON menggunakan `rootBundle` dan `jsonDecode`.
+
+### repositories
+
+Berfungsi sebagai lapisan abstraksi antara Provider dan Service.  
+`CourseRepository` menyediakan method untuk mengambil data course tanpa membuat Provider mengetahui detail sumber data.
+
+### providers
+
+Berisi state dan business logic aplikasi.  
+`CourseProvider` mengelola data course, loading, error, dan shared favorite state menggunakan `ChangeNotifier`.
+
+### screens
+
+Berisi halaman utama aplikasi seperti Home, Courses, Course Detail, Favorites, dan Profile.
+
+### widgets
+
+Berisi komponen UI yang dapat digunakan kembali.  
+Contohnya `CourseCard` untuk menampilkan informasi course.
+
+## Dependency Direction
+
+Screen / Widget  
+↓  
+Provider  
+↓  
+Repository  
+↓  
+Service  
+↓  
+JSON
+
+UI tidak membaca JSON secara langsung dan Provider tidak menyimpan `BuildContext`.
