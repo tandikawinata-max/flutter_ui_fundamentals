@@ -54,6 +54,7 @@ class CourseProvider extends ChangeNotifier {
       error = e.toString();
     } finally {
       isLoading = false;
+
       notifyListeners();
     }
   }
