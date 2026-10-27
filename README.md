@@ -54,3 +54,34 @@ Service
 JSON.
 
 UI tidak membaca JSON secara langsung dan Provider tidak menyimpan `BuildContext`.
+
+## REST API - Pertemuan 7
+
+### Endpoint
+
+https://course-api-pearl.vercel.app/courses
+
+### HTTP Method
+
+GET
+
+### Resource
+
+courses
+
+### Format Response
+
+JSON
+
+### Field JSON
+
+- id: ID unik course
+- code: Kode mata kuliah
+- title: Nama mata kuliah
+- credits: Jumlah SKS
+- status: Status mata kuliah
+
+### Status Code
+
+200 OK: Request berhasil.
+404 Not Found: Endpoint tidak ditemukan.
