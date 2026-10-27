@@ -4,13 +4,21 @@ import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_dashboard.dart';
+import 'services/course_api.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'Tandika Winata';
-
 const String studentId = '2415051080';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Pertemuan 7 - Tahap 2:
+  // Pengujian HTTP GET dari REST API.
+  fetchCoursesTest();
+
+  // Pertemuan 6:
+  // Mempertahankan Service, Repository, dan Provider.
   final CourseService service = CourseService();
 
   final CourseRepository repository = CourseRepository(service);
