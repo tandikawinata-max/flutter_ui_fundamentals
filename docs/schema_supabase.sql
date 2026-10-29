@@ -48,3 +48,14 @@ ON public.courses
 FOR SELECT
 TO anon
 USING (true);
+
+
+-- Pertemuan 7 - Tahap 15
+-- Tandika Winata - 2415051080
+-- Policy DELETE khusus praktikum
+
+CREATE POLICY "lab_courses_delete"
+ON public.courses
+FOR DELETE
+TO anon
+USING (code LIKE 'TDK%');
