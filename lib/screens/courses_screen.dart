@@ -12,7 +12,6 @@ const String studentId = '2415051080';
 class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
 
-  // TAHAP 6: TAMBAH
   Future<void> _openAddCourse(BuildContext context) async {
     await Navigator.push<bool>(
       context,
@@ -20,7 +19,6 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  // TAHAP 7: EDIT
   Future<void> _openEditCourse(BuildContext context, Course course) async {
     await Navigator.push<bool>(
       context,
@@ -28,7 +26,6 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  // TAHAP 8: KONFIRMASI DAN DELETE
   Future<void> _confirmDelete(BuildContext context, Course course) async {
     final provider = context.read<CourseProvider>();
 

@@ -1,87 +1,109 @@
-# Course Explorer v2
+# Course Data Manager
 
-Nama: Tandika Winata  
-NIM: 2415051080  
-Kelas: PTI 5B
+## Identitas Mahasiswa
+
+- Nama: Tandika Winata
+- NIM: 2415051080
+- Mata Kuliah: Pemrograman Mobile
+- Pertemuan: 7
+
+## Deskripsi
+
+Course Data Manager merupakan pengembangan
+aplikasi Course Explorer v2 berbasis Flutter
+untuk mengelola data mata kuliah menggunakan
+backend Supabase.
+
+Aplikasi mempertahankan navigasi responsif,
+halaman detail course, dan fitur Favorites
+dari praktikum sebelumnya.
+
+## Fitur
+
+- Menampilkan daftar course (SELECT)
+- Menambahkan course (INSERT)
+- Mengubah course (UPDATE)
+- Menghapus course (DELETE)
+- Konfirmasi sebelum menghapus data
+- Validasi form course
+- Loading, empty, success, dan error state
+- Tombol Retry saat pengambilan data gagal
+- Feedback menggunakan SnackBar
+- Favorites berdasarkan kode course
+- Navigasi responsif
+
+## Teknologi
+
+- Flutter dan Dart
+- Provider untuk state management
+- Supabase Flutter SDK
+- PostgreSQL melalui Supabase
+- Git dan GitHub
 
 ## Struktur Arsitektur
 
-Course Explorer v2 menggunakan pemisahan tanggung jawab dengan alur:
+- Model: representasi data Course
+- Data Source/Service: komunikasi backend
+- Repository: abstraksi akses data
+- Provider: pengelolaan state aplikasi
+- Screen: antarmuka pengguna
 
-Screen / Widget → Provider → Repository → Service / Data Source
+## Backend
 
-## Tanggung Jawab Folder
+Database utama aplikasi menggunakan
+Supabase PostgreSQL.
 
-### models
+Tabel: public.courses
 
-Berisi model data aplikasi.  
-Contoh: `Course` digunakan untuk merepresentasikan data course dari JSON.
+Kolom:
 
-### services
+- id
+- code
+- title
+- credits
+- status
+- created_at
 
-Berisi proses teknis untuk mengambil data dari sumber data.  
-`CourseService` membaca file JSON menggunakan `rootBundle` dan `jsonDecode`.
+Service utama:
+lib/services/course_supabase_service.dart
 
-### repositories
+Service REST API dari tahap sebelumnya
+tetap disimpan untuk dokumentasi praktikum.
 
-Berfungsi sebagai lapisan abstraksi antara Provider dan Service.  
-`CourseRepository` menyediakan method untuk mengambil data course tanpa membuat Provider mengetahui detail sumber data.
+## Cara Menjalankan
 
-### providers
+1. Pastikan Flutter SDK sudah terinstal.
+2. Buka folder project pada VS Code.
+3. Jalankan:
 
-Berisi state dan business logic aplikasi.  
-`CourseProvider` mengelola data course, loading, error, dan shared favorite state menggunakan `ChangeNotifier`.
+   flutter pub get
 
-### screens
+4. Siapkan Supabase Project URL dan
+   publishable key milik project.
 
-Berisi halaman utama aplikasi seperti Home, Courses, Course Detail, Favorites, dan Profile.
+5. Jalankan aplikasi:
 
-### widgets
+   flutter run -d chrome \
+    --dart-define=SUPABASE_URL=URL_PROJECT \
+    --dart-define=SUPABASE_PUBLISHABLE_KEY=KEY_PUBLISHABLE
 
-Berisi komponen UI yang dapat digunakan kembali.  
-Contohnya `CourseCard` untuk menampilkan informasi course.
+Perintah di atas ditulis untuk shell yang
+mendukung pemisahan baris dengan backslash.
+Jika memakai PowerShell, tulis perintah
+dalam satu baris.
 
-## Dependency Direction
+Gunakan publishable key pada client.
+Jangan pernah memasukkan service_role
+atau secret server ke dalam aplikasi.
 
-Screen / Widget  
-↓  
-Provider  
-↓  
-Repository  
-↓  
-Service  
-↓  
-JSON.
+## Keamanan
 
-UI tidak membaca JSON secara langsung dan Provider tidak menyimpan `BuildContext`.
+- Row Level Security (RLS) diaktifkan.
+- Akses database mengikuti policy Supabase.
+- Secret key server tidak disimpan di Flutter.
+- Policy anonim untuk laboratorium tidak
+  dimaksudkan sebagai konfigurasi produksi.
 
-## REST API - Pertemuan 7
+## Repository
 
-### Endpoint
-
-https://course-api-pearl.vercel.app/courses
-
-### HTTP Method
-
-GET
-
-### Resource
-
-courses
-
-### Format Response
-
-JSON
-
-### Field JSON
-
-- id: ID unik course
-- code: Kode mata kuliah
-- title: Nama mata kuliah
-- credits: Jumlah SKS
-- status: Status mata kuliah
-
-### Status Code
-
-200 OK: Request berhasil.
-404 Not Found: Endpoint tidak ditemukan.
+https://github.com/tandikawinata-max/flutter_ui_fundamentals
