@@ -4,12 +4,22 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/error_view.dart';
+import 'course_form_screen.dart';
 
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
 class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
+
+  Future<void> _openAddCourse(BuildContext context) async {
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const CourseFormScreen()),
+    );
+
+    if (!context.mounted) return;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +28,9 @@ class CoursesScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ======================================
+        // HEADER
+        // ======================================
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
           child: Column(
@@ -27,34 +40,67 @@ class CoursesScreen extends StatelessWidget {
                 'Courses',
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
+
               const SizedBox(height: 6),
+
               const Text('$studentId - $studentName'),
+
               const SizedBox(height: 8),
+
               Row(
                 children: [
                   Expanded(
                     child: Text('${provider.totalCourses} courses available'),
                   ),
+
                   IconButton(
                     tooltip: 'Refresh Data',
                     onPressed: provider.isLoading
                         ? null
-                        : () => context.read<CourseProvider>().loadCourses(),
+                        : () {
+                            context.read<CourseProvider>().loadCourses();
+                          },
                     icon: const Icon(Icons.refresh),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // ==================================
+              // TOMBOL TAMBAH COURSE - TAHAP 6
+              // ==================================
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: provider.isSaving
+                      ? null
+                      : () => _openAddCourse(context),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Tambah Course'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               ),
             ],
           ),
         ),
 
+        // ======================================
+        // CONTENT
+        // ======================================
         Expanded(child: _buildContent(context, provider)),
       ],
     );
   }
 
+  // ==========================================
+  // TAHAP 5: LOADING, ERROR, EMPTY, SUCCESS
+  // ==========================================
+
   Widget _buildContent(BuildContext context, CourseProvider provider) {
-    // LOADING STATE
+    // LOADING
     if (provider.isLoading || !provider.hasLoaded) {
       return const Center(
         child: Column(
@@ -68,7 +114,7 @@ class CoursesScreen extends StatelessWidget {
       );
     }
 
-    // ERROR STATE
+    // ERROR
     if (provider.error != null) {
       return ErrorView(
         message: provider.error!,
@@ -78,9 +124,9 @@ class CoursesScreen extends StatelessWidget {
       );
     }
 
-    // EMPTY STATE
+    // EMPTY
     if (provider.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -92,19 +138,22 @@ class CoursesScreen extends StatelessWidget {
       );
     }
 
-    // SUCCESS STATE
+    // SUCCESS
     return RefreshIndicator(
       onRefresh: () => context.read<CourseProvider>().loadCourses(),
+
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
 
+          // Layout responsive dari Pertemuan 5
           final int columns = width < 600
               ? 1
               : width < 840
               ? 2
               : 3;
 
+          // COMPACT: LIST VIEW
           if (columns == 1) {
             return ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -120,6 +169,7 @@ class CoursesScreen extends StatelessWidget {
             );
           }
 
+          // MEDIUM / EXPANDED: GRID VIEW
           return GridView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -127,7 +177,7 @@ class CoursesScreen extends StatelessWidget {
               crossAxisCount: columns,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              mainAxisExtent: 170,
+              mainAxisExtent: 190,
             ),
             itemCount: provider.courses.length,
             itemBuilder: (context, index) {
@@ -143,6 +193,10 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // CARD COURSE
+  // ==========================================
+
   Widget _buildCourseCard(
     BuildContext context,
     Course course,
@@ -154,14 +208,18 @@ class CoursesScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _showCourseDetail(context, course),
+        onTap: () {
+          _showCourseDetail(context, course);
+        },
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const CircleAvatar(child: Icon(Icons.menu_book_rounded)),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,9 +233,13 @@ class CoursesScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 6),
+
                     Text(course.code),
+
                     const SizedBox(height: 12),
+
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
@@ -195,8 +257,10 @@ class CoursesScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // FAVORITE
               IconButton(
-                tooltip: 'Favorite',
+                tooltip: isFavorite ? 'Hapus Favorite' : 'Tambah Favorite',
                 onPressed: () {
                   context.read<CourseProvider>().toggleFavorite(course.code);
                 },
@@ -212,10 +276,14 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // DETAIL COURSE
+  // ==========================================
+
   void _showCourseDetail(BuildContext context, Course course) {
     showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text(course.title),
           content: Column(
@@ -230,7 +298,9 @@ class CoursesScreen extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
               child: const Text('Tutup'),
             ),
           ],

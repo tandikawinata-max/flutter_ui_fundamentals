@@ -9,9 +9,12 @@ class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
 
   List<Course> _courses = [];
+
   bool _isLoading = false;
-  String? _error;
+  bool _isSaving = false;
   bool _hasLoaded = false;
+
+  String? _error;
 
   final Set<String> _favorites = {};
 
@@ -20,10 +23,12 @@ class CourseProvider extends ChangeNotifier {
 
   int get totalCourses => _courses.length;
 
-  // ASYNCHRONOUS STATE
+  // ASYNC STATE
   bool get isLoading => _isLoading;
-  String? get error => _error;
+  bool get isSaving => _isSaving;
   bool get hasLoaded => _hasLoaded;
+
+  String? get error => _error;
 
   bool get isEmpty =>
       _hasLoaded && !_isLoading && _error == null && _courses.isEmpty;
@@ -34,8 +39,11 @@ class CourseProvider extends ChangeNotifier {
   // FAVORITES
   Set<String> get favorites => Set.unmodifiable(_favorites);
 
-  List<Course> get favoriteCourses =>
-      _courses.where((course) => _favorites.contains(course.code)).toList();
+  List<Course> get favoriteCourses {
+    return _courses
+        .where((course) => _favorites.contains(course.code))
+        .toList();
+  }
 
   int get favoriteCount => favoriteCourses.length;
 
@@ -53,7 +61,7 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // LOAD DATA
+  // TAHAP 5: MEMUAT DATA
   Future<void> loadCourses() async {
     if (_isLoading) return;
 
@@ -67,14 +75,44 @@ class CourseProvider extends ChangeNotifier {
       _courses = result;
       _error = null;
 
-      debugPrint('HTTP GET berhasil: ${_courses.length} course');
+      debugPrint('GET berhasil: ${_courses.length} course');
     } catch (e) {
       _error = e.toString();
-
-      debugPrint('HTTP GET gagal: $e');
+      debugPrint('GET gagal: $e');
     } finally {
       _hasLoaded = true;
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // TAHAP 6: MENAMBAH COURSE
+  Future<Course> createCourse(Course course) async {
+    if (_isSaving) {
+      throw StateError('Proses penyimpanan masih berlangsung');
+    }
+
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final created = await repository.createCourse(course);
+
+      // Mengambil ulang data dari server.
+      await loadCourses();
+
+      if (_error != null) {
+        throw Exception(
+          'Course tersimpan, tetapi refresh gagal: '
+          '$_error',
+        );
+      }
+
+      debugPrint('POST berhasil: ${created.code}');
+
+      return created;
+    } finally {
+      _isSaving = false;
       notifyListeners();
     }
   }
