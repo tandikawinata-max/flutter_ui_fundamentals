@@ -6,16 +6,23 @@ class CourseRepository {
 
   final CourseApiService service;
 
+  // GET
   Future<List<Course>> getCourses() {
     return service.getCourses();
   }
 
+  // POST
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
   }
 
-  // TAHAP 7
+  // PUT
   Future<void> updateCourse(int id, Course course) {
     return service.updateCourse(id, course);
+  }
+
+  // DELETE
+  Future<void> deleteCourse(int id) {
+    return service.deleteCourse(id);
   }
 }

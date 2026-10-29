@@ -12,24 +12,91 @@ const String studentId = '2415051080';
 class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
 
-  // TAHAP 6 - TAMBAH COURSE
+  // TAHAP 6: TAMBAH
   Future<void> _openAddCourse(BuildContext context) async {
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const CourseFormScreen()),
     );
-
-    if (!context.mounted) return;
   }
 
-  // TAHAP 7 - EDIT COURSE
+  // TAHAP 7: EDIT
   Future<void> _openEditCourse(BuildContext context, Course course) async {
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => CourseFormScreen(course: course)),
     );
+  }
 
+  // TAHAP 8: KONFIRMASI DAN DELETE
+  Future<void> _confirmDelete(BuildContext context, Course course) async {
+    final provider = context.read<CourseProvider>();
+
+    if (provider.isBusy) return;
+
+    if (course.id == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ID course tidak tersedia')));
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Course?'),
+          content: Text(
+            'Apakah kamu yakin ingin menghapus '
+            '"${course.title}" (${course.code})?\n\n'
+            'Data yang sudah dihapus tidak dapat '
+            'dikembalikan melalui fitur ini.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Periksa context setelah dialog.
     if (!context.mounted) return;
+
+    if (confirmed != true) return;
+
+    try {
+      await provider.deleteCourse(course);
+
+      // Periksa context setelah await DELETE.
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${course.title} berhasil dihapus')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -51,7 +118,6 @@ class CoursesScreen extends StatelessWidget {
               const SizedBox(height: 6),
               const Text('$studentId - $studentName'),
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   Expanded(
@@ -59,29 +125,30 @@ class CoursesScreen extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'Refresh Data',
-                    onPressed: provider.isLoading
+                    onPressed: provider.isBusy
                         ? null
                         : () => context.read<CourseProvider>().loadCourses(),
                     icon: const Icon(Icons.refresh),
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: provider.isSaving
+                  onPressed: provider.isBusy
                       ? null
                       : () => _openAddCourse(context),
                   icon: const Icon(Icons.add_circle_outline),
                   label: const Text('Tambah Course'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
                 ),
               ),
+              if (provider.isDeleting) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+                const SizedBox(height: 4),
+                const Text('Menghapus course...'),
+              ],
             ],
           ),
         ),
@@ -98,7 +165,7 @@ class CoursesScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: 12),
             Text('Memuat data course...'),
           ],
         ),
@@ -127,7 +194,7 @@ class CoursesScreen extends StatelessWidget {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
 
-          final int columns = width < 600
+          final columns = width < 600
               ? 1
               : width < 840
               ? 2
@@ -155,7 +222,7 @@ class CoursesScreen extends StatelessWidget {
               crossAxisCount: columns,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              mainAxisExtent: 205,
+              mainAxisExtent: 230,
             ),
             itemCount: provider.courses.length,
             itemBuilder: (context, index) {
@@ -184,13 +251,12 @@ class CoursesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () => _showCourseDetail(context, course),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const CircleAvatar(child: Icon(Icons.menu_book_rounded)),
-              const SizedBox(width: 12),
-
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,10 +272,10 @@ class CoursesScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(course.code),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
+                      spacing: 6,
+                      runSpacing: 4,
                       children: [
                         Chip(
                           label: Text('${course.credits} SKS'),
@@ -224,27 +290,30 @@ class CoursesScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // TAHAP 7 - TOMBOL EDIT
                   IconButton(
                     tooltip: 'Edit Course',
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: provider.isSaving
+                    onPressed: provider.isBusy
                         ? null
                         : () => _openEditCourse(context, course),
+                    icon: const Icon(Icons.edit_outlined),
                   ),
-
-                  // FAVORITES
                   IconButton(
-                    tooltip: isFavorite ? 'Hapus Favorite' : 'Tambah Favorite',
-                    onPressed: () {
-                      context.read<CourseProvider>().toggleFavorite(
-                        course.code,
-                      );
-                    },
+                    tooltip: 'Hapus Course',
+                    onPressed: provider.isBusy
+                        ? null
+                        : () => _confirmDelete(context, course),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  ),
+                  IconButton(
+                    tooltip: 'Favorite',
+                    onPressed: provider.isDeleting
+                        ? null
+                        : () => context.read<CourseProvider>().toggleFavorite(
+                            course.code,
+                          ),
                     icon: Icon(
                       isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: isFavorite ? Colors.deepPurple : null,
@@ -259,6 +328,7 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
+  // DIALOG DETAIL
   void _showCourseDetail(BuildContext context, Course course) {
     showDialog<void>(
       context: context,
@@ -277,18 +347,24 @@ class CoursesScreen extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Tutup'),
             ),
-            FilledButton.icon(
+            TextButton.icon(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 _openEditCourse(context, course);
               },
               icon: const Icon(Icons.edit),
               label: const Text('Edit'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _confirmDelete(context, course);
+              },
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              label: const Text('Hapus'),
             ),
           ],
         );
