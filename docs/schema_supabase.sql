@@ -27,3 +27,24 @@ ON CONFLICT (code) DO NOTHING;
 -- pengaktifan rls
 ALTER TABLE public.courses
 ENABLE ROW LEVEL SECURITY;
+
+
+-- Pertemuan 7 - Tahap 14
+-- Tandika Winata - 2415051080
+-- Policy latihan: UPDATE course berkode TDK
+
+CREATE POLICY "lab_courses_update"
+ON public.courses
+FOR UPDATE
+TO anon
+USING (code LIKE 'TDK%')
+WITH CHECK (code LIKE 'TDK%');
+
+-- Tahap 12: Izin SELECT untuk project latihan
+-- Tandika Winata - 2415051080
+
+CREATE POLICY "lab_courses_select"
+ON public.courses
+FOR SELECT
+TO anon
+USING (true);
