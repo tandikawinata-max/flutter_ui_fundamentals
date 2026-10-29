@@ -4,32 +4,56 @@ import '../models/course.dart';
 import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
-  final CourseRepository repository;
-
   CourseProvider(this.repository);
 
-  List<Course> courses = [];
+  final CourseRepository repository;
 
-  bool isLoading = false;
+  // Data course dari REST API
+  List<Course> _courses = [];
 
-  String? error;
+  // State untuk proses asynchronous
+  bool _isLoading = false;
+  String? _error;
 
+  // Menyimpan kode course favorit
   final Set<String> _favorites = {};
 
-  Set<String> get favorites {
-    return Set.unmodifiable(_favorites);
+  // ====================================
+  // GETTER DATA COURSE
+  // ====================================
+
+  List<Course> get courses => List.unmodifiable(_courses);
+
+  int get totalCourses => _courses.length;
+
+  // ====================================
+  // GETTER STATE
+  // ====================================
+
+  bool get isLoading => _isLoading;
+
+  String? get error => _error;
+
+  // ====================================
+  // GETTER FAVORITES
+  // ====================================
+
+  Set<String> get favorites => Set.unmodifiable(_favorites);
+
+  List<Course> get favoriteCourses {
+    return _courses
+        .where((course) => _favorites.contains(course.code))
+        .toList();
   }
 
-  int get favoriteCount {
-    return _favorites.length;
-  }
+  int get favoriteCount => favoriteCourses.length;
+
+  // ====================================
+  // FUNGSI FAVORITES
+  // ====================================
 
   bool isFavorite(String code) {
     return _favorites.contains(code);
-  }
-
-  List<Course> get favoriteCourses {
-    return courses.where((course) => _favorites.contains(course.code)).toList();
   }
 
   void toggleFavorite(String code) {
@@ -42,19 +66,31 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadCourses() async {
-    isLoading = true;
-    error = null;
+  // ====================================
+  // MEMUAT DATA DARI REST API
+  // ====================================
 
+  Future<void> loadCourses() async {
+    // Mencegah request ganda
+    if (_isLoading) return;
+
+    _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      courses = await repository.getCourses();
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
+      // Mengambil data melalui repository
+      final List<Course> result = await repository.getCourses();
 
+      // Memperbarui daftar course
+      _courses = result;
+    } catch (e) {
+      // Menyimpan pesan kesalahan
+      _error = e.toString();
+
+      debugPrint('Gagal memuat course: $e');
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }

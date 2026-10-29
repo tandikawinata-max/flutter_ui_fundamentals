@@ -3,17 +3,21 @@ import 'package:provider/provider.dart';
 
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/course_api_test_screen.dart';
-import 'services/course_service.dart';
+import 'screens/main_dashboard.dart';
+import 'services/course_api.dart';
 
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
+const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final CourseService service = CourseService();
+  // Tahap 4: Menggunakan REST API Service
+  final CourseApiService service = CourseApiService(apiBaseUrl);
 
+  // Repository sebagai perantara data
   final CourseRepository repository = CourseRepository(service);
 
   runApp(
@@ -36,9 +40,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4)),
       ),
-
-      // Tampilan sementara untuk Tahap 3.
-      home: const CourseApiTestScreen(),
+      home: const MainDashboard(),
     );
   }
 }
