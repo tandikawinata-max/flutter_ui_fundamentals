@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../models/course.dart';
 import '../providers/course_provider.dart';
-import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 
 const String studentName = 'Tandika Winata';
-
 const String studentId = '2415051080';
 
 class CoursesScreen extends StatelessWidget {
@@ -16,121 +15,225 @@ class CoursesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Courses',
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Courses',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text('$studentId - $studentName'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('${provider.totalCourses} courses available'),
+                  ),
+                  IconButton(
+                    tooltip: 'Refresh Data',
+                    onPressed: provider.isLoading
+                        ? null
+                        : () => context.read<CourseProvider>().loadCourses(),
+                    icon: const Icon(Icons.refresh),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 6),
-
-          const Text('$studentId • $studentName'),
-
-          const SizedBox(height: 8),
-
-          Text(
-            '${provider.courses.length} courses available',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          Expanded(child: _buildContent(context, provider)),
-        ],
-      ),
+        Expanded(child: _buildContent(context, provider)),
+      ],
     );
   }
 
   Widget _buildContent(BuildContext context, CourseProvider provider) {
-    if (provider.isLoading) {
+    // LOADING STATE
+    if (provider.isLoading || !provider.hasLoaded) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Loading courses...'),
+            Text('Memuat data course...'),
           ],
         ),
       );
     }
 
+    // ERROR STATE
     if (provider.error != null) {
+      return ErrorView(
+        message: provider.error!,
+        onRetry: () {
+          context.read<CourseProvider>().loadCourses();
+        },
+      );
+    }
+
+    // EMPTY STATE
+    if (provider.isEmpty) {
       return Center(
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline_rounded, size: 48),
-
-                const SizedBox(height: 16),
-
-                const Text(
-                  'Unable to load courses',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(provider.error!, textAlign: TextAlign.center),
-
-                const SizedBox(height: 18),
-
-                FilledButton.icon(
-                  onPressed: () {
-                    context.read<CourseProvider>().loadCourses();
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
-                ),
-              ],
-            ),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.inbox_outlined, size: 58, color: Colors.grey),
+            SizedBox(height: 12),
+            Text('Data course belum tersedia'),
+          ],
         ),
       );
     }
 
-    if (provider.courses.isEmpty) {
-      return const Center(child: Text('No course available.'));
-    }
+    // SUCCESS STATE
+    return RefreshIndicator(
+      onRefresh: () => context.read<CourseProvider>().loadCourses(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 900) {
+          final int columns = width < 600
+              ? 1
+              : width < 840
+              ? 2
+              : 3;
+
+          if (columns == 1) {
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.courses.length,
+              itemBuilder: (context, index) {
+                return _buildCourseCard(
+                  context,
+                  provider.courses[index],
+                  provider,
+                );
+              },
+            );
+          }
+
           return GridView.builder(
-            itemCount: provider.courses.length,
-
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 2.4,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 170,
             ),
-
+            itemCount: provider.courses.length,
             itemBuilder: (context, index) {
-              final Course course = provider.courses[index];
-
-              return CourseCard(course: course);
+              return _buildCourseCard(
+                context,
+                provider.courses[index],
+                provider,
+              );
             },
           );
-        }
+        },
+      ),
+    );
+  }
 
-        return ListView.separated(
-          itemCount: provider.courses.length,
+  Widget _buildCourseCard(
+    BuildContext context,
+    Course course,
+    CourseProvider provider,
+  ) {
+    final isFavorite = provider.isFavorite(course.code);
 
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showCourseDetail(context, course),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const CircleAvatar(child: Icon(Icons.menu_book_rounded)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(course.code),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        Chip(
+                          label: Text('${course.credits} SKS'),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        Chip(
+                          label: Text(course.status),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Favorite',
+                onPressed: () {
+                  context.read<CourseProvider>().toggleFavorite(course.code);
+                },
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.deepPurple : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-          itemBuilder: (context, index) {
-            return CourseCard(course: provider.courses[index]);
-          },
+  void _showCourseDetail(BuildContext context, Course course) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(course.title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('ID: ${course.id ?? "-"}'),
+              Text('Kode: ${course.code}'),
+              Text('SKS: ${course.credits}'),
+              Text('Status: ${course.status}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Tutup'),
+            ),
+          ],
         );
       },
     );

@@ -8,49 +8,36 @@ class CourseProvider extends ChangeNotifier {
 
   final CourseRepository repository;
 
-  // Data course dari REST API
   List<Course> _courses = [];
-
-  // State untuk proses asynchronous
   bool _isLoading = false;
   String? _error;
+  bool _hasLoaded = false;
 
-  // Menyimpan kode course favorit
   final Set<String> _favorites = {};
 
-  // ====================================
-  // GETTER DATA COURSE
-  // ====================================
-
+  // DATA COURSE
   List<Course> get courses => List.unmodifiable(_courses);
 
   int get totalCourses => _courses.length;
 
-  // ====================================
-  // GETTER STATE
-  // ====================================
-
+  // ASYNCHRONOUS STATE
   bool get isLoading => _isLoading;
-
   String? get error => _error;
+  bool get hasLoaded => _hasLoaded;
 
-  // ====================================
-  // GETTER FAVORITES
-  // ====================================
+  bool get isEmpty =>
+      _hasLoaded && !_isLoading && _error == null && _courses.isEmpty;
 
+  bool get isSuccess =>
+      _hasLoaded && !_isLoading && _error == null && _courses.isNotEmpty;
+
+  // FAVORITES
   Set<String> get favorites => Set.unmodifiable(_favorites);
 
-  List<Course> get favoriteCourses {
-    return _courses
-        .where((course) => _favorites.contains(course.code))
-        .toList();
-  }
+  List<Course> get favoriteCourses =>
+      _courses.where((course) => _favorites.contains(course.code)).toList();
 
   int get favoriteCount => favoriteCourses.length;
-
-  // ====================================
-  // FUNGSI FAVORITES
-  // ====================================
 
   bool isFavorite(String code) {
     return _favorites.contains(code);
@@ -66,12 +53,8 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ====================================
-  // MEMUAT DATA DARI REST API
-  // ====================================
-
+  // LOAD DATA
   Future<void> loadCourses() async {
-    // Mencegah request ganda
     if (_isLoading) return;
 
     _isLoading = true;
@@ -79,17 +62,18 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Mengambil data melalui repository
-      final List<Course> result = await repository.getCourses();
+      final result = await repository.getCourses();
 
-      // Memperbarui daftar course
       _courses = result;
+      _error = null;
+
+      debugPrint('HTTP GET berhasil: ${_courses.length} course');
     } catch (e) {
-      // Menyimpan pesan kesalahan
       _error = e.toString();
 
-      debugPrint('Gagal memuat course: $e');
+      debugPrint('HTTP GET gagal: $e');
     } finally {
+      _hasLoaded = true;
       _isLoading = false;
       notifyListeners();
     }
