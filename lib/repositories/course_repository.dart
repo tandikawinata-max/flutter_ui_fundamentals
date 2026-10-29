@@ -6,13 +6,16 @@ class CourseRepository {
 
   final CourseApiService service;
 
-  // Mengambil seluruh data
   Future<List<Course>> getCourses() {
     return service.getCourses();
   }
 
-  // Menambahkan course baru
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
+  }
+
+  // TAHAP 7
+  Future<void> updateCourse(int id, Course course) {
+    return service.updateCourse(id, course);
   }
 }

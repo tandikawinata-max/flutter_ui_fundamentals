@@ -5,7 +5,9 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 
 class CourseFormScreen extends StatefulWidget {
-  const CourseFormScreen({super.key});
+  const CourseFormScreen({super.key, this.course});
+
+  final Course? course;
 
   @override
   State<CourseFormScreen> createState() => _CourseFormScreenState();
@@ -14,12 +16,28 @@ class CourseFormScreen extends StatefulWidget {
 class _CourseFormScreenState extends State<CourseFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _codeController = TextEditingController();
-  final _titleController = TextEditingController();
-  final _creditsController = TextEditingController();
+  late final TextEditingController _codeController;
+  late final TextEditingController _titleController;
+  late final TextEditingController _creditsController;
 
-  String _status = 'planned';
+  late String _status;
   bool _isSubmitting = false;
+
+  bool get isEditing => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final course = widget.course;
+
+    _codeController = TextEditingController(text: course?.code ?? '');
+    _titleController = TextEditingController(text: course?.title ?? '');
+    _creditsController = TextEditingController(
+      text: course?.credits.toString() ?? '',
+    );
+    _status = course?.status ?? 'planned';
+  }
 
   @override
   void dispose() {
@@ -39,6 +57,7 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
     }
 
     final course = Course(
+      id: widget.course?.id,
       code: _codeController.text.trim(),
       title: _titleController.text.trim(),
       credits: int.parse(_creditsController.text.trim()),
@@ -50,12 +69,31 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
     });
 
     try {
-      await context.read<CourseProvider>().createCourse(course);
+      final provider = context.read<CourseProvider>();
+
+      if (isEditing) {
+        final id = widget.course!.id;
+
+        if (id == null) {
+          throw StateError('ID course tidak tersedia untuk update');
+        }
+
+        await provider.updateCourse(id, course);
+      } else {
+        await provider.createCourse(course);
+      }
 
       if (!mounted) return;
 
+      // SnackBar ditampilkan setelah operasi selesai.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Course berhasil ditambahkan')),
+        SnackBar(
+          content: Text(
+            isEditing
+                ? 'Course berhasil diperbarui'
+                : 'Course berhasil ditambahkan',
+          ),
+        ),
       );
 
       Navigator.pop(context, true);
@@ -86,7 +124,7 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
     final busy = _isSubmitting || isSaving;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Course')),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Course' : 'Tambah Course')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -94,23 +132,29 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Tambah Mata Kuliah',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                isEditing ? 'Edit Mata Kuliah' : 'Tambah Mata Kuliah',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text('Tandika Winata - 2415051080'),
               const SizedBox(height: 24),
 
-              // CODE
+              // KODE COURSE
               TextFormField(
                 controller: _codeController,
+                readOnly: isEditing,
                 enabled: !busy,
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Kode Course',
-                  hintText: 'Contoh: TDK001',
-                  border: OutlineInputBorder(),
+                  helperText: isEditing
+                      ? 'Kode tidak dapat diubah saat edit'
+                      : null,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -119,16 +163,14 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
-              // TITLE
+              // JUDUL
               TextFormField(
                 controller: _titleController,
                 enabled: !busy,
                 decoration: const InputDecoration(
                   labelText: 'Nama Course',
-                  hintText: 'Contoh: Pemrograman Mobile',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -138,17 +180,15 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
-              // CREDITS
+              // SKS
               TextFormField(
                 controller: _creditsController,
                 enabled: !busy,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Jumlah SKS',
-                  hintText: 'Contoh: 3',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -157,15 +197,12 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
                   if (credits == null) {
                     return 'SKS harus berupa angka bulat';
                   }
-
                   if (credits <= 0) {
                     return 'SKS harus lebih dari 0';
                   }
-
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
 
               // STATUS
@@ -190,10 +227,9 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
                         }
                       },
               ),
-
               const SizedBox(height: 28),
 
-              // SAVE BUTTON
+              // SIMPAN
               FilledButton.icon(
                 onPressed: busy ? null : _saveCourse,
                 icon: busy
@@ -203,7 +239,13 @@ class _CourseFormScreenState extends State<CourseFormScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(busy ? 'Menyimpan...' : 'Simpan Course'),
+                label: Text(
+                  busy
+                      ? 'Menyimpan...'
+                      : isEditing
+                      ? 'Simpan Perubahan'
+                      : 'Simpan Course',
+                ),
               ),
             ],
           ),

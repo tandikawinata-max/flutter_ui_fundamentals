@@ -9,25 +9,21 @@ class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
 
   List<Course> _courses = [];
+  final Set<String> _favorites = {};
 
   bool _isLoading = false;
   bool _isSaving = false;
   bool _hasLoaded = false;
-
   String? _error;
-
-  final Set<String> _favorites = {};
 
   // DATA COURSE
   List<Course> get courses => List.unmodifiable(_courses);
-
   int get totalCourses => _courses.length;
 
   // ASYNC STATE
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   bool get hasLoaded => _hasLoaded;
-
   String? get error => _error;
 
   bool get isEmpty =>
@@ -39,17 +35,12 @@ class CourseProvider extends ChangeNotifier {
   // FAVORITES
   Set<String> get favorites => Set.unmodifiable(_favorites);
 
-  List<Course> get favoriteCourses {
-    return _courses
-        .where((course) => _favorites.contains(course.code))
-        .toList();
-  }
+  List<Course> get favoriteCourses =>
+      _courses.where((course) => _favorites.contains(course.code)).toList();
 
   int get favoriteCount => favoriteCourses.length;
 
-  bool isFavorite(String code) {
-    return _favorites.contains(code);
-  }
+  bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
     if (_favorites.contains(code)) {
@@ -57,11 +48,10 @@ class CourseProvider extends ChangeNotifier {
     } else {
       _favorites.add(code);
     }
-
     notifyListeners();
   }
 
-  // TAHAP 5: MEMUAT DATA
+  // GET DAN REFRESH
   Future<void> loadCourses() async {
     if (_isLoading) return;
 
@@ -70,11 +60,7 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await repository.getCourses();
-
-      _courses = result;
-      _error = null;
-
+      _courses = await repository.getCourses();
       debugPrint('GET berhasil: ${_courses.length} course');
     } catch (e) {
       _error = e.toString();
@@ -86,10 +72,10 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // TAHAP 6: MENAMBAH COURSE
+  // POST - TAHAP 6
   Future<Course> createCourse(Course course) async {
     if (_isSaving) {
-      throw StateError('Proses penyimpanan masih berlangsung');
+      throw StateError('Proses simpan sedang berlangsung');
     }
 
     _isSaving = true;
@@ -98,19 +84,39 @@ class CourseProvider extends ChangeNotifier {
     try {
       final created = await repository.createCourse(course);
 
-      // Mengambil ulang data dari server.
       await loadCourses();
 
       if (_error != null) {
-        throw Exception(
-          'Course tersimpan, tetapi refresh gagal: '
-          '$_error',
-        );
+        throw Exception('Course tersimpan, tetapi refresh gagal: $_error');
       }
 
-      debugPrint('POST berhasil: ${created.code}');
-
       return created;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // PUT - TAHAP 7
+  Future<void> updateCourse(int id, Course course) async {
+    if (_isSaving) {
+      throw StateError('Proses simpan sedang berlangsung');
+    }
+
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      await repository.updateCourse(id, course);
+
+      // Refresh dari backend, bukan menambah item lokal.
+      await loadCourses();
+
+      if (_error != null) {
+        throw Exception('Course diperbarui, tetapi refresh gagal: $_error');
+      }
+
+      debugPrint('PUT berhasil: ${course.code}');
     } finally {
       _isSaving = false;
       notifyListeners();
