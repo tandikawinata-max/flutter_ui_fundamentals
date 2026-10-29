@@ -14,11 +14,8 @@ const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Tahap 4: Menggunakan REST API Service
-  final CourseApiService service = CourseApiService(apiBaseUrl);
-
-  // Repository sebagai perantara data
-  final CourseRepository repository = CourseRepository(service);
+  // REST API sebagai data source saat ini.
+  final repository = CourseRepository(CourseApiService(apiBaseUrl));
 
   runApp(
     ChangeNotifierProvider(
