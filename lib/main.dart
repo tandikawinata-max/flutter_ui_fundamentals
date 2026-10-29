@@ -5,45 +5,45 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_dashboard.dart';
-import 'services/course_api.dart';
+import 'services/course_supabase_service.dart';
 
-// Identitas mahasiswa
+// Identitas Mahasiswa
 const String studentName = 'Tandika Winata';
 const String studentId = '2415051080';
 
-// REST API dosen: tetap digunakan pada Tahap 10
-const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
-
-// Konfigurasi Supabase melalui --dart-define
+// Konfigurasi Supabase
 const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
-const String supabaseAnonKey = String.fromEnvironment(
+const String supabasePublishableKey = String.fromEnvironment(
   'SUPABASE_PUBLISHABLE_KEY',
 );
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Validasi konfigurasi sebelum inisialisasi.
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+  // Memeriksa konfigurasi Supabase
+  if (supabaseUrl.isEmpty || supabasePublishableKey.isEmpty) {
     throw StateError(
       'Konfigurasi Supabase belum tersedia. '
-      'Jalankan aplikasi dengan SUPABASE_URL '
-      'dan SUPABASE_PUBLISHABLE_KEY.',
+      'Periksa SUPABASE_URL dan '
+      'SUPABASE_PUBLISHABLE_KEY.',
     );
   }
 
-  // TAHAP 10: Inisialisasi Supabase
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  // TAHAP 10 - Inisialisasi Supabase
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabasePublishableKey,
+  );
 
   debugPrint('Supabase client berhasil diinisialisasi');
 
   debugPrint('Mahasiswa: $studentName ($studentId)');
 
-  // TAHAP 9:
-  // Sumber data utama masih REST API dosen.
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+  // TAHAP 12 - Mengganti REST API dengan Supabase
+  final repository = CourseRepository(CourseSupabaseService());
 
+  // Provider tetap seperti tahap sebelumnya
   runApp(
     ChangeNotifierProvider(
       create: (_) => CourseProvider(repository)..loadCourses(),
