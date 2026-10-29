@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_dashboard.dart';
-import 'services/course_supabase_service.dart';
+import 'services/course_api.dart';
 
 // Identitas Mahasiswa
 const String studentName = 'Tandika Winata';
@@ -41,7 +41,9 @@ Future<void> main() async {
   debugPrint('Mahasiswa: $studentName ($studentId)');
 
   // TAHAP 12 - Mengganti REST API dengan Supabase
-  final repository = CourseRepository(CourseSupabaseService());
+  final repository = CourseRepository(
+    CourseApiService('https://course-api-pearl.vercel.app/endpoint-salah'),
+  );
 
   // Provider tetap seperti tahap sebelumnya
   runApp(
